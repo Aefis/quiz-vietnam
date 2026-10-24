@@ -15,9 +15,11 @@ service cloud.firestore {
         && request.resource.data.done == false
         && request.resource.data.createdAt == request.time;
 
-      // Modification : seulement cocher / décocher
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done'])
-        && request.resource.data.done is bool;
+      // Modification : cocher / décocher, ou changer l'étape liée
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done', 'where'])
+        && request.resource.data.done is bool
+        && request.resource.data.where is string
+        && request.resource.data.where.size() <= 4;
 
       allow delete: if true;
     }

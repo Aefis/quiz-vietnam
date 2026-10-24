@@ -225,6 +225,7 @@ h1 span { color: var(--lacquer); }
 .act:hover:not(:disabled) { border-color: var(--gold); }
 .act:disabled { opacity: 0.55; cursor: default; }
 .act:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+select.act { max-width: 100%; }
 .act.danger { color: var(--bad); }
 .act.danger.confirm { background: var(--bad); border-color: var(--bad); color: #fff; }
 .hint.err { color: var(--bad); font-weight: 600; }
@@ -845,6 +846,7 @@ function renderCard() {
     <div class="idea-card">
       <div class="what"><b>${esc(t.text)}</b><span>${[t.where !== "" ? esc(placeName(t.where)) : "Sans étape", t.done ? "réalisée" : ""].filter(Boolean).join(" · ")}</span></div>
       <div class="idea-actions">
+        <select class="act" id="cardStop" aria-label="Lier à une étape">${stopOptions(t.where)}</select>
         <button class="act" data-act="done">${t.done ? "↺ Pas encore fait" : "✓ C'est fait"}</button>
         <button class="act danger${confirmDel ? " confirm" : ""}" data-act="del">${confirmDel ? "Confirmer la suppression" : "Supprimer"}</button>
         <button class="act" data-act="close" aria-label="Fermer">✕</button>
@@ -852,8 +854,9 @@ function renderCard() {
     </div>`;
 }
 
-todoStop.innerHTML = `<option value="">Sans étape</option>` +
-  PLACE_ORDER.map((w) => `<option value="${w}">${w.startsWith("p") ? "↳ " : +w + 1 + ". "}${placeName(w)}</option>`).join("");
+const stopOptions = (sel) => `<option value="">Sans étape</option>` +
+  PLACE_ORDER.map((w) => `<option value="${w}"${w === sel ? " selected" : ""}>${w.startsWith("p") ? "↳ " : +w + 1 + ". "}${placeName(w)}</option>`).join("");
+todoStop.innerHTML = stopOptions("");
 
 // Envies partagées via Firestore quand FIREBASE_CONFIG est renseigné, sinon stockées dans le navigateur.
 // Cette config n'est pas secrète : ce sont les règles Firestore (firestore.rules) qui protègent les données.
@@ -913,6 +916,16 @@ cloud.addEventListener("click", (ev) => {
   confirmDel = false;
   renderTodos();
   if (selId) ideaCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
+});
+
+// Lier (ou délier) une envie existante à une étape
+ideaCard.addEventListener("change", (ev) => {
+  const t = todos.find((x) => x.id === selId);
+  if (!t || ev.target.id !== "cardStop") return;
+  const where = ev.target.value;
+  if (placeFilter && placeFilter !== where) placeFilter = null;
+  if (ideas) return void ideas.doc(t.id).update({ where }).catch(fail);
+  t.where = where; saveTodos(); renderTodos();
 });
 
 ideaCard.addEventListener("click", (ev) => {
