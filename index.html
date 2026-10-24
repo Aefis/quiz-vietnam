@@ -306,7 +306,7 @@ select.act { max-width: 100%; }
       <div class="legs">
         <span class="leg">Aller : <b>Hanoï</b></span>
         <span class="leg">Retour : <b>Hô Chi Minh-Ville</b></span>
-        <span class="leg"><b>8</b> étapes et <b>2</b> villes de passage, du nord au sud</span>
+        <span class="leg"><b>11</b> étapes, du nord au sud</span>
       </div>
     </div>
     <div class="trip-body">
@@ -315,7 +315,6 @@ select.act { max-width: 100%; }
     </div>
     <div class="legend">
       <span><i class="dot red"></i>Étape du parcours (cliquer pour le détail)</span>
-      <span><i class="dot hollow"></i>Ville de passage (sur le trajet, pas une étape)</span>
       <span><i class="dot gold"></i>Lieu noté dans le carnet, relié à son étape</span>
     </div>
   </section>
@@ -505,7 +504,7 @@ render();
 // Étapes dans l'ordre du carnet. "carnet" = lieux notés à la main ; "aussi" = autres incontournables.
 const STOPS = [
   {
-    name: "Hanoï", vn: "Hà Nội", tag: "Arrivée", ll: [21.0285, 105.8542], zoom: 14,
+    id: "han", name: "Hanoï", vn: "Hà Nội", tag: "Arrivée", ll: [21.0285, 105.8542], zoom: 14,
     intro: "La capitale, entre lacs, temples et le dédale animé du Vieux Quartier. Parfait pour se mettre dans l'ambiance dès l'arrivée.",
     travel: "Arrivée en avion à l'aéroport de Noi Bai (environ 45 min du centre).",
     carnet: [
@@ -520,7 +519,7 @@ const STOPS = [
     tip: "Dans le Vieux Quartier, traversez à pas réguliers : les scooters vous contournent.",
   },
   {
-    name: "Sapa", vn: "Sa Pa", tag: "Montagnes du nord-ouest", ll: [22.3364, 103.8438], zoom: 12,
+    id: "sap", name: "Sapa", vn: "Sa Pa", tag: "Montagnes du nord-ouest", ll: [22.3364, 103.8438], zoom: 12,
     intro: "Ville de montagne entourée de rizières en terrasses et de villages des minorités Hmong et Dao.",
     travel: "Depuis Hanoï : bus couchette ou limousine (environ 5 à 6 h) ou train de nuit jusqu'à Lao Cai.",
     carnet: [],
@@ -532,7 +531,7 @@ const STOPS = [
     tip: "Il fait frais en altitude : prévoyez un pull, même en été.",
   },
   {
-    name: "Ha Giang", vn: "Hà Giang", tag: "La boucle", ll: [22.8233, 104.9836], zoom: 9,
+    id: "hag", name: "Ha Giang", vn: "Hà Giang", tag: "La boucle", ll: [22.8233, 104.9836], zoom: 9,
     intro: "Point de départ de la célèbre « boucle de Ha Giang » : 3 à 4 jours de routes de montagne spectaculaires jusqu'à la frontière chinoise.",
     travel: "Depuis Sapa : bus d'environ 6 à 7 h.",
     carnet: [
@@ -547,14 +546,27 @@ const STOPS = [
     tip: "Sauf grande expérience de la moto, faites la boucle avec un « easy rider » (chauffeur local).",
   },
   {
-    name: "Ninh Binh", vn: "Ninh Bình", tag: "La baie d'Ha Long terrestre", ll: [20.2506, 105.9745], zoom: 11,
+    id: "hal", name: "Baie d'Ha Long", vn: "Vịnh Hạ Long", tag: "Croisière entre les îlots", ll: [20.9101, 107.1839], zoom: 10,
+    intro: "Près de 2 000 îles et îlots calcaires classés à l'UNESCO, à découvrir en croisière, souvent sur une nuit.",
+    travel: "Depuis Ha Giang : bus couchette jusqu'à Hanoï (environ 6 h), puis 2 h 30 par l'autoroute.",
+    carnet: [
+      { name: "Baie de Lan Hạ", ll: [20.745, 107.085], text: "La voisine plus calme de la baie d'Ha Long, au large de l'île de Cát Bà : kayak, plages cachées et beaucoup moins de bateaux. Les deux baies se touchent." },
+    ],
+    aussi: [
+      { name: "Grotte Sửng Sốt (« de la Surprise »)", text: "L'une des plus grandes grottes de la baie, avec d'immenses salles." },
+      { name: "Île de Ti Tốp", text: "Un escalier mène à un point de vue panoramique sur la baie." },
+      { name: "Kayak et village flottant", text: "Pagayer entre les îlots, jusqu'aux maisons flottantes des pêcheurs." },
+      { name: "Île de Cát Bà", text: "Parc national et point de départ idéal pour Lan Hạ." },
+    ],
+    tip: "Choisissez une croisière qui passe par Lan Hạ : moins de monde et des eaux plus calmes.",
+  },
+  {
+    id: "nib", name: "Ninh Binh", vn: "Ninh Bình", tag: "La baie d'Ha Long terrestre", ll: [20.2506, 105.9745], zoom: 11,
     intro: "Des pitons calcaires au milieu des rizières et des rivières. On l'appelle souvent la « baie d'Ha Long terrestre ».",
-    travel: "Depuis Ha Giang : bus couchette via Hanoï (environ 7 à 8 h).",
+    travel: "Depuis la baie d'Ha Long : environ 3 h de route.",
     carnet: [
       { name: "Tràng An", ll: [20.2743, 105.9127], text: "Balade de 2 à 3 h en barque à rames entre les falaises, à travers des grottes et jusqu'à des temples. Classé à l'UNESCO." },
       { name: "Hang Múa", ll: [20.2287, 105.9317], text: "Environ 500 marches jusqu'au sommet, avec un dragon de pierre et une vue magnifique sur Tam Coc. Allez-y au coucher du soleil." },
-      { name: "Baie de Lan Hạ (près d'Ha Long)", ll: [20.745, 107.085], text: "La voisine plus calme de la baie d'Ha Long, au large de l'île de Cat Ba : croisière, kayak et plages cachées. Compter environ 3 h de route depuis Ninh Binh." },
-      { name: "Baie d'Ha Long", ll: [20.9101, 107.1839], text: "Près de 2 000 îlots calcaires classés à l'UNESCO. Plus fréquentée que Lan Hạ : une croisière d'une nuit permet de profiter des deux baies, qui se touchent." },
     ],
     aussi: [
       { name: "Tam Cốc", text: "Balade en barque entre les rizières, les rameurs pagaient avec les pieds." },
@@ -564,7 +576,7 @@ const STOPS = [
     tip: "Louez un vélo pour circuler entre Tam Coc, Hang Mua et Trang An.",
   },
   {
-    name: "Phong Nha", vn: "Phong Nha – Kẻ Bàng", tag: "Grottes & jungle", ll: [17.6105, 106.3093], zoom: 11,
+    id: "phn", name: "Phong Nha", vn: "Phong Nha – Kẻ Bàng", tag: "Grottes & jungle", ll: [17.6105, 106.3093], zoom: 11,
     intro: "Un parc national classé à l'UNESCO, avec certaines des plus grandes grottes du monde au milieu de la jungle.",
     travel: "Depuis Ninh Binh : train ou bus de nuit jusqu'à Dong Hoi (environ 8 h), puis 45 min de route.",
     carnet: [
@@ -578,9 +590,35 @@ const STOPS = [
     tip: "Prévoyez des chaussures qui peuvent être mouillées et de l'anti-moustique.",
   },
   {
-    name: "Hội An", vn: "Hội An", tag: "Ville des lanternes", ll: [15.8801, 108.3380], zoom: 13,
+    id: "hue", name: "Huế", vn: "Huế", tag: "Ancienne capitale impériale", ll: [16.4637, 107.5909], zoom: 13,
+    intro: "L'ancienne capitale impériale de la dynastie Nguyễn (1802-1945), au bord de la rivière des Parfums.",
+    travel: "Depuis Phong Nha : bus ou train depuis Dong Hoi (environ 3 à 4 h).",
+    carnet: [],
+    aussi: [
+      { name: "Cité impériale", text: "Citadelle, Cité pourpre interdite et palais, classés à l'UNESCO." },
+      { name: "Tombeaux impériaux", text: "Ceux de Tự Đức, Minh Mạng et Khải Định, dans les collines autour de la ville." },
+      { name: "Pagode Thiên Mụ", text: "Tour de sept étages au bord de la rivière des Parfums." },
+      { name: "Bún bò Huế", text: "Soupe de nouilles épicée à la citronnelle, la spécialité de la ville." },
+    ],
+    tip: "Entre Huế et Đà Nẵng, la route du col des Nuages (Hải Vân) offre l'une des plus belles vues côtières du pays.",
+  },
+  {
+    id: "dan", name: "Đà Nẵng", vn: "Đà Nẵng", tag: "Ville balnéaire", ll: [16.0545, 108.2022], zoom: 12,
+    intro: "Grande ville balnéaire et moderne, à 30 min de Hội An. Son aéroport sert aussi pour le vol vers Phú Quốc.",
+    travel: "Depuis Huế : environ 2 h 30 par la route ou en train.",
+    carnet: [],
+    aussi: [
+      { name: "Pont du Dragon", text: "Il crache du feu et de l'eau les samedis et dimanches à 21 h." },
+      { name: "Montagnes de Marbre", text: "Cinq collines avec grottes, pagodes et points de vue." },
+      { name: "Ba Na Hills et le Pont d'Or", text: "Passerelle dorée tenue par deux mains géantes, accessible en téléphérique." },
+      { name: "Plage de My Khe", text: "Longue plage de sable en pleine ville." },
+    ],
+    tip: "Đà Nẵng et Hội An sont si proches qu'on peut visiter l'une depuis l'autre.",
+  },
+  {
+    id: "hoi", name: "Hội An", vn: "Hội An", tag: "Ville des lanternes", ll: [15.8801, 108.3380], zoom: 13,
     intro: "Ancien port marchand aux maisons jaunes et aux lanternes colorées, entre rizières et plages.",
-    travel: "Depuis Phong Nha, en passant par Huế et Đà Nẵng (voir les villes de passage). Đà Nẵng est à 45 min de route.",
+    travel: "Depuis Đà Nẵng : environ 45 min de route.",
     carnet: [
       { name: "Cẩm Thanh", ll: [15.8770, 108.3660], text: "La forêt de cocotiers d'eau, qu'on visite en panier rond en bambou (thúng chai), avec des rameurs qui font tourner les paniers." },
       { name: "Plage d'An Bàng", ll: [15.9140, 108.3420], text: "Belle plage de sable à 4 km de la vieille ville, avec des bars de plage décontractés. Parfaite pour une fin de journée." },
@@ -595,7 +633,7 @@ const STOPS = [
     tip: "Les soirs de pleine lune, la vieille ville éteint ses lumières et allume ses lanternes.",
   },
   {
-    name: "Phú Quốc", vn: "Phú Quốc", tag: "Avant-dernière étape · plages", ll: [10.2170, 103.9600], zoom: 10,
+    id: "phq", name: "Phú Quốc", vn: "Phú Quốc", tag: "Avant-dernière étape · plages", ll: [10.2170, 103.9600], zoom: 10,
     intro: "Une île tropicale pour se reposer avant la fin du voyage : plages, couchers de soleil et fruits de mer.",
     travel: "Depuis Hoi An : vol depuis Da Nang (environ 1 h 45).",
     carnet: [],
@@ -609,7 +647,7 @@ const STOPS = [
     tip: "Le coucher de soleil se regarde depuis la côte ouest.",
   },
   {
-    name: "Hô Chi Minh-Ville", vn: "Sài Gòn", tag: "Dernière étape · shopping · retour", ll: [10.7769, 106.7009], zoom: 14,
+    id: "hcm", name: "Hô Chi Minh-Ville", vn: "Sài Gòn", tag: "Dernière étape · shopping · retour", ll: [10.7769, 106.7009], zoom: 14,
     intro: "L'ancienne Saïgon, grande ville dynamique. Dernière étape, consacrée au shopping avant le vol retour.",
     travel: "Depuis Phu Quoc : vol d'environ 1 h. Vol retour depuis l'aéroport Tân Sơn Nhất.",
     carnet: [
@@ -626,33 +664,8 @@ const STOPS = [
   },
 ];
 
-// Villes de passage (liste Google Maps) : sur le tracé, mais pas des étapes numérotées. "after" = index de l'étape précédente.
-const PASSAGES = [
-  {
-    name: "Huế", vn: "Huế", after: 4, ll: [16.4637, 107.5909], zoom: 13,
-    intro: "L'ancienne capitale impériale de la dynastie Nguyễn (1802-1945), au bord de la rivière des Parfums.",
-    travel: "Depuis Phong Nha : bus ou train depuis Dong Hoi (environ 3 à 4 h).",
-    aussi: [
-      { name: "Cité impériale", text: "Citadelle, Cité pourpre interdite et palais, classés à l'UNESCO." },
-      { name: "Tombeaux impériaux", text: "Ceux de Tự Đức, Minh Mạng et Khải Định, dans les collines autour de la ville." },
-      { name: "Pagode Thiên Mụ", text: "Tour de sept étages au bord de la rivière des Parfums." },
-      { name: "Bún bò Huế", text: "Soupe de nouilles épicée à la citronnelle, la spécialité de la ville." },
-    ],
-    tip: "Entre Huế et Đà Nẵng, la route du col des Nuages (Hải Vân) offre l'une des plus belles vues côtières du pays.",
-  },
-  {
-    name: "Đà Nẵng", vn: "Đà Nẵng", after: 4, ll: [16.0545, 108.2022], zoom: 12,
-    intro: "Grande ville balnéaire et moderne, à 30 min de Hội An. Son aéroport sert aussi pour le vol vers Phú Quốc.",
-    travel: "Depuis Huế : environ 2 h 30 par la route ou en train.",
-    aussi: [
-      { name: "Pont du Dragon", text: "Il crache du feu et de l'eau les samedis et dimanches à 21 h." },
-      { name: "Montagnes de Marbre", text: "Cinq collines avec grottes, pagodes et points de vue." },
-      { name: "Ba Na Hills et le Pont d'Or", text: "Passerelle dorée tenue par deux mains géantes, accessible en téléphérique." },
-      { name: "Plage de My Khe", text: "Longue plage de sable en pleine ville." },
-    ],
-    tip: "Đà Nẵng et Hội An sont si proches qu'on peut visiter l'une depuis l'autre.",
-  },
-];
+// Villes de passage : sur le tracé sans être des étapes. "after" = index de l'étape précédente.
+const PASSAGES = [];
 
 const panel = document.getElementById("panel");
 let map, stopMarkers = [], activeStop = -1;
@@ -830,15 +843,16 @@ const VN_SHAPE = [[[[10.391,104.064],[10.341,104.083],[10.225,104.076],[10.111,1
 const TODO_KEY = "vietnam-todo-v1";
 // Envies de départ tirées du carnet
 const TODO_START = [
-  ["Faire le tour du lac Hoàn Kiếm", 0], ["Goûter un café à l'œuf", 0],
-  ["Voir les rizières en terrasses", 1], ["Passer le col de Mã Pí Lèng", 2],
-  ["Balade en barque à Tràng An", 3], ["Monter les marches de Hang Múa", 3], ["Croisière dans la baie de Lan Hạ / Ha Long", 3],
-  ["Explorer les grottes et la jungle", 4], ["Faire un tour en panier rond à Cẩm Thanh", 5], ["Coucher de soleil à la plage d'An Bàng", 5],
-  ["Voir la Cité impériale de Huế", "p0"], ["Plage de Sao", 6], ["Shopping au marché Bến Thành", 7],
+  ["Faire le tour du lac Hoàn Kiếm", "han"], ["Goûter un café à l'œuf", "han"],
+  ["Voir les rizières en terrasses", "sap"], ["Passer le col de Mã Pí Lèng", "hag"],
+  ["Croisière dans la baie de Lan Hạ / Ha Long", "hal"], ["Balade en barque à Tràng An", "nib"], ["Monter les marches de Hang Múa", "nib"],
+  ["Explorer les grottes et la jungle", "phn"], ["Voir la Cité impériale de Huế", "hue"],
+  ["Faire un tour en panier rond à Cẩm Thanh", "hoi"], ["Coucher de soleil à la plage d'An Bàng", "hoi"],
+  ["Plage de Sao", "phq"], ["Shopping au marché Bến Thành", "hcm"],
 ];
 // Teinte de chaque étape (clé = valeur du champ "where")
-const HUES = { "0": 355, "1": 130, "2": 210, "3": 165, "4": 85, "5": 38, "6": 188, "7": 315, "p0": 270, "p1": 235 };
-const hueStyle = (w) => w in HUES ? `--h:${HUES[w]}` : "--h:150;--s:8%";
+const HUES = { han: 355, hoi: 30, phq: 60, phn: 90, sap: 125, nib: 155, hal: 185, hag: 215, dan: 245, hue: 275, hcm: 315 };
+const hueStyle = (w) => w && w in HUES ? `--h:${HUES[w]}` : "--h:150;--s:8%";
 
 const cloud = document.getElementById("cloud");
 const ideaCard = document.getElementById("ideaCard");
@@ -847,7 +861,8 @@ const todoText = document.getElementById("todoText");
 const todoStop = document.getElementById("todoStop");
 let todos, todoFilter = "all", placeFilter = null, selId = null, confirmDel = false;
 
-const placeName = (v) => v === "" || v == null ? "" : String(v).startsWith("p") ? PASSAGES[+String(v).slice(1)].name : STOPS[+v].name;
+const stopIndex = (code) => STOPS.findIndex((s) => s.id === code);
+const placeName = (code) => STOPS[stopIndex(code)]?.name || "";
 const hash = (s) => Math.abs([...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7));
 
 function loadTodos() {
@@ -862,7 +877,7 @@ function saveTodos() {
 }
 
 // Ordre des étapes pour les filtres et le menu
-const PLACE_ORDER = STOPS.flatMap((s, i) => [String(i), ...PASSAGES.map((p, j) => p.after === i ? "p" + j : null).filter(Boolean)]);
+const PLACE_ORDER = STOPS.map((s) => s.id);
 
 function renderPlaces() {
   const used = PLACE_ORDER.filter((w) => todos.some((t) => t.where === w));
@@ -908,7 +923,7 @@ function renderCard() {
 }
 
 const stopOptions = (sel) => `<option value="">Sans étape</option>` +
-  PLACE_ORDER.map((w) => `<option value="${w}"${w === sel ? " selected" : ""}>${w.startsWith("p") ? "↳ " : +w + 1 + ". "}${placeName(w)}</option>`).join("");
+  PLACE_ORDER.map((w) => `<option value="${w}"${w === sel ? " selected" : ""}>${stopIndex(w) + 1}. ${placeName(w)}</option>`).join("");
 todoStop.innerHTML = stopOptions("");
 
 // Envies partagées via Firestore quand FIREBASE_CONFIG est renseigné, sinon stockées dans le navigateur.
