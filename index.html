@@ -176,10 +176,14 @@ h1 span { color: var(--lacquer); }
 @keyframes rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-/* ---------- To-do ---------- */
-.todo { max-width: 720px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+/* ---------- Envies (nuage) ---------- */
+:root { --bub-s: 70%; --bub-bg-l: 91%; --bub-fg-l: 27%; --bub-line-l: 78%; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bub-s: 40%; --bub-bg-l: 21%; --bub-fg-l: 82%; --bub-line-l: 34%; } }
+:root[data-theme="dark"] { --bub-s: 40%; --bub-bg-l: 21%; --bub-fg-l: 82%; --bub-line-l: 34%; }
+.todo { max-width: 960px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .todo-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .todo-head h2 { font-family: var(--font-display); font-size: 1.3rem; margin: 0; }
+.todo-head p { margin: 0; color: var(--muted); font-size: 0.9rem; flex-basis: 100%; }
 .todo-form { display: flex; gap: 8px; flex-wrap: wrap; }
 .todo-form input, .todo-form select {
   font: inherit; color: var(--fg); background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px;
@@ -187,22 +191,46 @@ h1 span { color: var(--lacquer); }
 .todo-form input { flex: 1 1 260px; min-width: 0; }
 .todo-form select { flex: 0 1 200px; min-width: 0; }
 .todo-form input:focus-visible, .todo-form select:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
-.filters { display: flex; gap: 6px; }
-.chip { font: inherit; font-size: 0.85rem; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 4px 14px; cursor: pointer; }
+.cloud-tools { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.filters, .places { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: inherit; font-size: 0.85rem; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .chip:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.todo-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.todo-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); }
-.todo-item:first-child { border-top: 0; }
-.todo-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--good); cursor: pointer; margin: 0; }
-.todo-item .txt { overflow-wrap: anywhere; }
-.todo-item.done .txt { text-decoration: line-through; color: var(--muted); }
-.todo-item .where { display: block; font-size: 0.8rem; color: var(--gold); font-weight: 600; }
-.del { font: inherit; font-size: 1.2rem; line-height: 1; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-.del:hover { color: var(--bad); background: var(--bad-bg); }
-.del:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
-.todo-empty { padding: 24px 16px; text-align: center; color: var(--muted); }
+.chip i { width: 10px; height: 10px; border-radius: 50%; background: hsl(var(--h) var(--s, 60%) 50%); }
+.cloud {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; min-height: 340px;
+  padding: 36px 20px; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; align-items: center; gap: 12px 14px;
+}
+.bubble {
+  font-family: var(--font-display); font-weight: 600; line-height: 1.15; text-align: center; cursor: pointer;
+  color: hsl(var(--h) var(--s, var(--bub-s)) var(--bub-fg-l)); background: hsl(var(--h) var(--s, var(--bub-s)) var(--bub-bg-l));
+  border: 1.5px solid hsl(var(--h) var(--s, var(--bub-s)) var(--bub-line-l)); border-radius: 999px; padding: 0.45em 0.95em;
+  max-width: 100%; overflow-wrap: anywhere; transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
+  transition: transform .15s ease, box-shadow .15s ease; animation: pop .35s ease backwards;
+}
+.bubble:hover { transform: rotate(0deg) scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.bubble:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.bubble.sel { box-shadow: 0 0 0 3px var(--gold); transform: rotate(0deg) scale(1.05); }
+.bubble.done { text-decoration: line-through; opacity: 0.5; }
+.bubble .v { font-family: var(--font-body); font-size: 0.7em; font-weight: 600; opacity: 0.8; margin-left: 0.4em; white-space: nowrap; }
+.cloud-empty { color: var(--muted); text-align: center; max-width: 36ch; }
+.idea-card {
+  background: var(--surface); border: 1px solid var(--gold); border-radius: 14px; padding: 16px 18px;
+  display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: space-between; animation: rise .2s ease;
+}
+.idea-card .what { min-width: 0; flex: 1 1 240px; }
+.idea-card .what b { font-size: 1.05rem; overflow-wrap: anywhere; }
+.idea-card .what span { display: block; font-size: 0.85rem; color: var(--muted); }
+.idea-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.act { font: inherit; font-size: 0.9rem; font-weight: 600; border-radius: 10px; padding: 8px 14px; cursor: pointer; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); }
+.act:hover:not(:disabled) { border-color: var(--gold); }
+.act:disabled { opacity: 0.55; cursor: default; }
+.act:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.act.love { background: var(--lacquer); border-color: var(--lacquer); color: #fff; }
+.act.danger { color: var(--bad); }
+.act.danger.confirm { background: var(--bad); border-color: var(--bad); color: #fff; }
 .hint.err { color: var(--bad); font-weight: 600; }
+@keyframes pop { from { transform: scale(0.6); opacity: 0; } }
 
 @media (max-width: 860px) {
   .trip-body { grid-template-columns: minmax(0, 1fr); }
@@ -225,7 +253,7 @@ h1 span { color: var(--lacquer); }
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Quiz</button>
       <button class="tab" role="tab" id="tab-carte" aria-controls="view-carte" aria-selected="false">Itinéraire</button>
-      <button class="tab" role="tab" id="tab-todo" aria-controls="view-todo" aria-selected="false">To-do</button>
+      <button class="tab" role="tab" id="tab-todo" aria-controls="view-todo" aria-selected="false">Envies</button>
     </nav>
   </header>
 
@@ -261,21 +289,26 @@ h1 span { color: var(--lacquer); }
 
   <section id="view-todo" role="tabpanel" aria-labelledby="tab-todo" class="todo" hidden>
     <div class="todo-head">
-      <h2>À faire au Vietnam</h2>
+      <h2>Nos envies au Vietnam</h2>
       <span class="score-pill" id="todoCount"></span>
+      <p>Ajoutez une envie et votez « ♥ Moi aussi » pour celles des autres : plus une bulle a de votes, plus elle grossit.</p>
     </div>
     <div class="progress" aria-hidden="true"><i id="todoBar"></i></div>
     <form class="todo-form" id="todoForm" autocomplete="off">
-      <input type="text" id="todoText" placeholder="Ex. : Je veux voir les rizières" aria-label="Nouvelle chose à faire" maxlength="120" required>
+      <input type="text" id="todoText" placeholder="Ex. : Je veux voir les rizières" aria-label="Nouvelle envie" maxlength="120" required>
       <select id="todoStop" aria-label="Étape"></select>
       <button class="btn" type="submit">Ajouter</button>
     </form>
-    <div class="filters" role="group" aria-label="Filtrer">
-      <button class="chip" data-f="all" aria-pressed="true">Tout</button>
-      <button class="chip" data-f="todo" aria-pressed="false">À faire</button>
-      <button class="chip" data-f="done" aria-pressed="false">Fait</button>
+    <div class="cloud-tools">
+      <div class="filters" role="group" aria-label="Filtrer par état">
+        <button class="chip" data-f="all" aria-pressed="true">Tout</button>
+        <button class="chip" data-f="todo" aria-pressed="false">À faire</button>
+        <button class="chip" data-f="done" aria-pressed="false">Fait</button>
+      </div>
+      <div class="places" id="places" role="group" aria-label="Filtrer par étape"></div>
     </div>
-    <ul class="todo-list" id="todoList"></ul>
+    <div class="cloud" id="cloud" aria-label="Nuage d'envies"></div>
+    <div id="ideaCard" aria-live="polite"></div>
     <p class="hint" id="todoHint">La liste est enregistrée dans ce navigateur, sur cet appareil.</p>
   </section>
 </div>
@@ -741,9 +774,10 @@ function initMap() {
 // Contour du Vietnam (Natural Earth 1:50m, domaine public), en [lat, lng]
 const VN_SHAPE = [[[[10.391,104.064],[10.341,104.083],[10.225,104.076],[10.111,104.037],[10.061,104.048],[10.029,104.018],[10.243,103.952],[10.335,103.868],[10.371,103.85],[10.369,103.898],[10.427,103.986],[10.428,104.028],[10.391,104.064]]],[[[21.508,107.973],[21.499,107.926],[21.497,107.809],[21.406,107.707],[21.368,107.637],[21.336,107.527],[21.285,107.41],[21.194,107.376],[21.128,107.373],[21.055,107.354],[20.949,107.165],[20.96,107.112],[20.999,107.075],[20.991,107.019],[20.971,106.981],[20.974,106.936],[20.95,106.886],[20.958,106.821],[20.991,106.76],[21,106.725],[21,106.683],[20.96,106.675],[20.806,106.737],[20.735,106.753],[20.527,106.551],[20.392,106.573],[20.289,106.518],[20.206,106.396],[19.992,106.166],[19.987,106.062],[19.939,105.984],[19.587,105.814],[19.467,105.812],[19.379,105.785],[19.294,105.791],[19.128,105.716],[19.057,105.639],[18.966,105.622],[18.779,105.732],[18.746,105.744],[18.646,105.808],[18.574,105.839],[18.502,105.888],[18.316,106.066],[18.259,106.145],[18.221,106.24],[18.053,106.412],[17.946,106.499],[17.874,106.459],[17.72,106.479],[17.765,106.356],[17.747,106.371],[17.663,106.517],[17.367,106.736],[17.221,106.926],[17.056,107.12],[16.898,107.18],[16.794,107.355],[16.643,107.549],[16.609,107.541],[16.568,107.593],[16.488,107.724],[16.403,107.803],[16.322,107.834],[16.31,107.882],[16.329,107.936],[16.337,107.991],[16.331,108.029],[16.243,108.088],[16.164,108.17],[16.091,108.209],[16.101,108.241],[16.09,108.267],[16.029,108.274],[15.989,108.286],[15.872,108.395],[15.763,108.447],[15.585,108.578],[15.484,108.674],[15.427,108.743],[15.378,108.821],[15.181,108.898],[15.001,108.94],[14.803,109.022],[14.716,109.085],[14.553,109.087],[14.384,109.137],[14.27,109.191],[14.154,109.207],[14.097,109.224],[14.053,109.245],[13.856,109.303],[13.765,109.288],[13.855,109.247],[13.591,109.252],[13.451,109.288],[13.279,109.272],[13.219,109.31],[13.025,109.377],[12.956,109.424],[12.719,109.42],[12.6,109.445],[12.671,109.381],[12.752,109.336],[12.709,109.274],[12.646,109.219],[12.391,109.305],[12.415,109.207],[12.073,109.216],[11.993,109.256],[11.955,109.259],[11.909,109.247],[11.959,109.22],[12.01,109.215],[11.999,109.199],[11.972,109.2],[11.912,109.167],[11.837,109.158],[11.773,109.193],[11.725,109.199],[11.665,109.173],[11.601,109.133],[11.593,109.04],[11.468,109.018],[11.336,108.987],[11.315,108.821],[11.199,108.7],[11.156,108.551],[11.041,108.419],[10.934,108.272],[10.92,108.176],[10.897,108.095],[10.72,108.001],[10.7,107.845],[10.555,107.564],[10.486,107.47],[10.459,107.384],[10.398,107.262],[10.42,107.235],[10.472,107.194],[10.498,107.088],[10.556,107.036],[10.631,107.021],[10.661,107.007],[10.618,106.984],[10.441,106.966],[10.4,106.947],[10.383,106.902],[10.433,106.813],[10.536,106.727],[10.465,106.606],[10.456,106.643],[10.462,106.698],[10.444,106.741],[10.376,106.778],[10.339,106.776],[10.296,106.757],[10.289,106.644],[10.304,106.492],[10.298,106.464],[10.232,106.602],[10.193,106.729],[10.151,106.785],[10.116,106.785],[10.06,106.714],[9.991,106.659],[9.949,106.658],[9.901,106.657],[9.86,106.596],[9.868,106.557],[9.94,106.449],[10.222,106.136],[10.142,106.184],[9.821,106.507],[9.716,106.564],[9.641,106.572],[9.604,106.539],[9.559,106.484],[9.556,106.378],[9.675,106.204],[9.962,105.926],[10.001,105.831],[9.674,106.112],[9.594,106.159],[9.502,106.206],[9.448,106.193],[9.397,106.168],[9.093,105.501],[8.962,105.401],[8.801,105.322],[8.711,105.191],[8.629,105.114],[8.583,104.892],[8.598,104.77],[8.747,104.896],[8.802,104.819],[9.185,104.815],[9.606,104.845],[9.816,104.903],[9.869,104.987],[9.901,105.093],[9.945,105.095],[9.996,105.084],[10.067,105.028],[10.101,104.966],[10.115,104.873],[10.203,104.802],[10.199,104.748],[10.17,104.663],[10.208,104.613],[10.267,104.594],[10.34,104.516],[10.411,104.426],[10.422,104.467],[10.463,104.514],[10.516,104.564],[10.523,104.69],[10.521,104.815],[10.534,104.851],[10.59,104.901],[10.662,104.984],[10.702,105.046],[10.734,105.061],[10.809,105.036],[10.887,105.022],[10.911,105.046],[10.898,105.159],[10.861,105.284],[10.845,105.315],[10.94,105.387],[10.952,105.406],[10.951,105.453],[10.969,105.577],[10.994,105.698],[10.99,105.755],[10.926,105.811],[10.864,105.853],[10.858,105.875],[10.885,105.938],[10.852,105.99],[10.797,106.099],[10.795,106.164],[10.922,106.132],[11.012,106.168],[11.037,106.161],[11.079,106.1],[11.245,105.892],[11.294,105.856],[11.372,105.861],[11.487,105.854],[11.559,105.835],[11.601,105.838],[11.635,105.851],[11.648,105.89],[11.653,105.927],[11.682,105.956],[11.758,106.006],[11.751,106.103],[11.708,106.239],[11.682,106.34],[11.687,106.399],[11.698,106.412],[11.738,106.411],[11.912,106.418],[11.948,106.414],[11.966,106.5],[11.969,106.631],[11.979,106.7],[12.052,106.765],[12.077,106.931],[12.176,107.051],[12.277,107.159],[12.304,107.212],[12.322,107.28],[12.319,107.33],[12.26,107.393],[12.296,107.446],[12.365,107.506],[12.432,107.538],[12.54,107.555],[12.706,107.544],[12.836,107.512],[12.933,107.482],[13.03,107.475],[13.225,107.546],[13.438,107.605],[13.522,107.594],[13.654,107.529],[13.816,107.462],[13.993,107.389],[14.019,107.362],[14.069,107.343],[14.127,107.331],[14.308,107.36],[14.369,107.364],[14.451,107.448],[14.546,107.493],[14.65,107.535],[14.705,107.519],[14.817,107.514],[14.872,107.525],[14.916,107.505],[14.98,107.48],[15.021,107.496],[15.057,107.555],[15.118,107.59],[15.19,107.634],[15.255,107.653],[15.31,107.622],[15.392,107.564],[15.466,107.46],[15.56,107.339],[15.619,107.279],[15.678,107.233],[15.747,107.19],[15.802,107.166],[15.839,107.189],[15.922,107.361],[15.952,107.392],[15.998,107.41],[16.043,107.396],[16.067,107.35],[16.084,107.296],[16.136,107.217],[16.28,107.07],[16.312,107.002],[16.353,106.931],[16.397,106.893],[16.516,106.851],[16.526,106.832],[16.49,106.792],[16.453,106.74],[16.459,106.696],[16.493,106.656],[16.538,106.638],[16.6,106.594],[16.651,106.546],[16.821,106.534],[16.877,106.526],[16.954,106.502],[16.982,106.465],[17.003,106.426],[17.144,106.333],[17.217,106.27],[17.415,106.006],[17.447,105.974],[17.529,105.903],[17.644,105.779],[17.738,105.691],[17.834,105.627],[17.918,105.598],[17.984,105.588],[18.077,105.519],[18.154,105.458],[18.179,105.4],[18.19,105.333],[18.235,105.273],[18.339,105.163],[18.405,105.115],[18.45,105.086],[18.496,105.087],[18.573,105.113],[18.617,105.145],[18.651,105.146],[18.679,105.115],[18.728,104.993],[18.803,104.717],[18.861,104.613],[18.934,104.518],[18.984,104.446],[19.196,104.109],[19.231,104.006],[19.269,103.918],[19.305,103.892],[19.34,103.896],[19.366,103.932],[19.42,104.028],[19.483,104.063],[19.564,104.052],[19.646,104.013],[19.675,104.032],[19.678,104.063],[19.681,104.127],[19.685,104.26],[19.611,104.546],[19.619,104.588],[19.755,104.743],[19.836,104.802],[19.904,104.815],[19.947,104.846],[20.018,104.928],[20.083,104.929],[20.169,104.889],[20.202,104.848],[20.217,104.813],[20.205,104.699],[20.225,104.677],[20.289,104.662],[20.329,104.656],[20.375,104.619],[20.414,104.496],[20.425,104.392],[20.441,104.368],[20.486,104.408],[20.53,104.479],[20.555,104.533],[20.6,104.575],[20.647,104.583],[20.688,104.53],[20.734,104.461],[20.821,104.35],[20.914,104.195],[20.946,104.101],[20.941,104.052],[20.861,103.882],[20.81,103.791],[20.717,103.714],[20.697,103.635],[20.738,103.555],[20.78,103.464],[20.841,103.211],[20.892,103.104],[21.203,102.884],[21.266,102.851],[21.337,102.872],[21.44,102.888],[21.506,102.91],[21.57,102.949],[21.626,102.959],[21.681,102.95],[21.713,102.918],[21.722,102.876],[21.735,102.845],[21.807,102.816],[21.798,102.798],[21.71,102.771],[21.678,102.739],[21.662,102.695],[21.676,102.662],[21.711,102.641],[21.771,102.631],[21.852,102.61],[21.904,102.583],[21.958,102.487],[22.027,102.443],[22.178,102.301],[22.284,102.183],[22.379,102.127],[22.415,102.176],[22.466,102.237],[22.546,102.302],[22.647,102.376],[22.708,102.406],[22.733,102.428],[22.751,102.471],[22.741,102.517],[22.7,102.599],[22.648,102.721],[22.587,102.83],[22.525,102.874],[22.466,102.935],[22.448,102.982],[22.453,103.005],[22.498,103.076],[22.542,103.136],[22.593,103.138],[22.639,103.193],[22.714,103.266],[22.764,103.301],[22.77,103.327],[22.755,103.356],[22.597,103.471],[22.588,103.493],[22.612,103.525],[22.734,103.571],[22.782,103.62],[22.77,103.637],[22.538,103.915],[22.54,103.942],[22.55,103.971],[22.586,103.991],[22.666,104.013],[22.752,104.054],[22.8,104.143],[22.809,104.213],[22.769,104.238],[22.712,104.298],[22.704,104.372],[22.804,104.527],[22.82,104.578],[22.818,104.632],[22.822,104.687],[22.86,104.74],[22.911,104.796],[23.011,104.815],[23.1,104.827],[23.136,104.865],[23.161,104.91],[23.194,104.996],[23.281,105.189],[23.322,105.239],[23.345,105.275],[23.308,105.35],[23.235,105.44],[23.181,105.495],[23.122,105.531],[23.073,105.548],[23.03,105.691],[22.969,105.782],[22.923,105.843],[22.925,105.903],[22.937,105.962],[22.975,106.001],[22.976,106.068],[22.97,106.148],[22.955,106.184],[22.869,106.249],[22.857,106.279],[22.863,106.338],[22.894,106.451],[22.908,106.542],[22.874,106.624],[22.779,106.78],[22.711,106.736],[22.638,106.702],[22.586,106.633],[22.573,106.582],[22.501,106.55],[22.395,106.536],[22.342,106.554],[22.325,106.593],[22.289,106.637],[22.241,106.654],[22.136,106.66],[22.018,106.658],[21.979,106.664],[21.986,106.698],[22,106.729],[21.982,106.794],[21.951,106.875],[21.92,106.925],[21.924,106.971],[21.893,107.006],[21.835,107.02],[21.794,107.062],[21.717,107.179],[21.711,107.272],[21.609,107.351],[21.642,107.433],[21.598,107.471],[21.614,107.641],[21.655,107.759],[21.645,107.802],[21.56,107.908],[21.508,107.973]]],[[[8.683,106.617],[8.681,106.589],[8.701,106.568],[8.766,106.659],[8.723,106.65],[8.701,106.653],[8.683,106.617]]],[[[10.397,107.168],[10.337,107.084],[10.387,107.078],[10.42,107.151],[10.446,107.177],[10.446,107.195],[10.397,107.168]]],[[[20.816,106.866],[20.796,106.854],[20.844,106.803],[20.864,106.769],[20.928,106.795],[20.858,106.855],[20.816,106.866]]],[[[21.217,107.603],[21.092,107.459],[21.094,107.404],[21.235,107.453],[21.269,107.476],[21.22,107.563],[21.217,107.603]]],[[[20.927,107.521],[20.901,107.466],[20.903,107.399],[20.952,107.479],[21.013,107.519],[21.034,107.551],[20.981,107.551],[20.927,107.521]]],[[[20.747,107.031],[20.743,106.99],[20.824,106.911],[20.867,106.953],[20.837,107.044],[20.817,107.064],[20.8,107.064],[20.761,107.042],[20.747,107.031]]]];
 
-/* =================== TO-DO =================== */
+/* =================== ENVIES (nuage) =================== */
 const TODO_KEY = "vietnam-todo-v1";
-// Liste de départ tirée du carnet, modifiable librement
+const VOTED_KEY = "vietnam-votes-v1";
+// Envies de départ tirées du carnet
 const TODO_START = [
   ["Faire le tour du lac Hoàn Kiếm", 0], ["Goûter un café à l'œuf", 0],
   ["Voir les rizières en terrasses", 1], ["Passer le col de Mã Pí Lèng", 2],
@@ -751,44 +785,88 @@ const TODO_START = [
   ["Explorer les grottes et la jungle", 4], ["Faire un tour en panier rond à Cẩm Thanh", 5], ["Coucher de soleil à la plage d'An Bàng", 5],
   ["Voir la Cité impériale de Huế", "p0"], ["Plage de Sao", 6], ["Shopping au marché Bến Thành", 7],
 ];
-const todoList = document.getElementById("todoList");
+// Teinte de chaque étape (clé = valeur du champ "where")
+const HUES = { "0": 355, "1": 130, "2": 210, "3": 165, "4": 85, "5": 38, "6": 188, "7": 315, "p0": 270, "p1": 235 };
+const hueStyle = (w) => w in HUES ? `--h:${HUES[w]}` : "--h:150;--s:8%";
+
+const cloud = document.getElementById("cloud");
+const ideaCard = document.getElementById("ideaCard");
 const todoForm = document.getElementById("todoForm");
 const todoText = document.getElementById("todoText");
 const todoStop = document.getElementById("todoStop");
-let todos, todoFilter = "all";
+let todos, todoFilter = "all", placeFilter = null, selId = null, confirmDel = false;
 
 const placeName = (v) => v === "" || v == null ? "" : String(v).startsWith("p") ? PASSAGES[+String(v).slice(1)].name : STOPS[+v].name;
+const hash = (s) => Math.abs([...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7));
 
 function loadTodos() {
   try {
     const raw = localStorage.getItem(TODO_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
-  return TODO_START.map(([text, where], i) => ({ id: "s" + i, text, where: String(where), done: false }));
+  return TODO_START.map(([text, where], i) => ({ id: "s" + i, text, where: String(where), done: false, votes: 0 }));
 }
 function saveTodos() {
   try { localStorage.setItem(TODO_KEY, JSON.stringify(todos)); } catch (e) {}
 }
+let voted = new Set();
+try { voted = new Set(JSON.parse(localStorage.getItem(VOTED_KEY) || "[]")); } catch (e) {}
+const saveVoted = () => { try { localStorage.setItem(VOTED_KEY, JSON.stringify([...voted])); } catch (e) {} };
+
+// Ordre des étapes pour les filtres et le menu
+const PLACE_ORDER = STOPS.flatMap((s, i) => [String(i), ...PASSAGES.map((p, j) => p.after === i ? "p" + j : null).filter(Boolean)]);
+
+function renderPlaces() {
+  const used = PLACE_ORDER.filter((w) => todos.some((t) => t.where === w));
+  if (placeFilter && !used.includes(placeFilter)) placeFilter = null;
+  document.getElementById("places").innerHTML = used.map((w) =>
+    `<button class="chip" data-place="${w}" aria-pressed="${placeFilter === w}" style="${hueStyle(w)}"><i></i>${esc(placeName(w))}</button>`).join("");
+}
 
 function renderTodos() {
   const done = todos.filter((t) => t.done).length;
-  document.getElementById("todoCount").innerHTML = `<b>${done}</b> / ${todos.length} fait${done > 1 ? "s" : ""}`;
+  document.getElementById("todoCount").innerHTML = `<b>${done}</b> / ${todos.length} réalisée${done > 1 ? "s" : ""}`;
   document.getElementById("todoBar").style.width = (todos.length ? done / todos.length * 100 : 0) + "%";
-  const shown = todos.filter((t) => todoFilter === "all" || (todoFilter === "done") === t.done);
-  todoList.innerHTML = shown.length ? shown.map((t) => `
-    <li class="todo-item${t.done ? " done" : ""}">
-      <input type="checkbox" id="todo-${t.id}" data-id="${t.id}" ${t.done ? "checked" : ""}>
-      <label for="todo-${t.id}"><span class="txt">${esc(t.text)}</span>${t.where !== "" ? `<span class="where">${esc(placeName(t.where))}</span>` : ""}</label>
-      <button class="del" data-del="${t.id}" aria-label="Supprimer « ${esc(t.text)} »">×</button>
-    </li>`).join("")
-    : `<li class="todo-empty">${todoFilter === "done" ? "Rien de coché pour l'instant." : todoFilter === "todo" ? "Tout est fait, bravo !" : "La liste est vide. Ajoutez votre première envie ci-dessus."}</li>`;
+  renderPlaces();
+
+  const shown = todos.filter((t) => (todoFilter === "all" || (todoFilter === "done") === !!t.done) && (!placeFilter || t.where === placeFilter));
+  // Les plus votées au centre : tri puis répartition alternée à gauche et à droite
+  const sorted = [...shown].sort((a, b) => (b.votes || 0) - (a.votes || 0) || hash(a.id) - hash(b.id));
+  const arranged = [];
+  sorted.forEach((t, i) => (i % 2 ? arranged.push(t) : arranged.unshift(t)));
+  const maxV = Math.max(1, ...shown.map((t) => t.votes || 0));
+
+  cloud.innerHTML = arranged.length ? arranged.map((t, i) => {
+    const h = hash(t.id), v = t.votes || 0;
+    const size = 0.95 + 1.15 * Math.sqrt(v / maxV);
+    return `<button class="bubble${t.done ? " done" : ""}${t.id === selId ? " sel" : ""}" data-id="${t.id}"
+      style="${hueStyle(t.where)};font-size:${size.toFixed(2)}rem;--r:${(h % 5) - 2}deg;--y:${((h >> 3) % 9) - 4}px;animation-delay:${Math.min(i, 20) * 25}ms"
+      aria-label="${esc(t.text)}${v ? `, ${v} vote${v > 1 ? "s" : ""}` : ""}${t.done ? ", réalisée" : ""}">${esc(t.text)}${v ? `<span class="v">♥ ${v}</span>` : ""}</button>`;
+  }).join("")
+    : `<p class="cloud-empty">${todoFilter === "done" ? "Aucune envie réalisée pour l'instant." : todoFilter === "todo" ? "Tout est fait, bravo !" : "Le nuage est vide. Ajoutez la première envie ci-dessus."}</p>`;
+  renderCard();
+}
+
+function renderCard() {
+  const t = todos.find((x) => x.id === selId);
+  if (!t) { selId = null; ideaCard.innerHTML = ""; return; }
+  const v = t.votes || 0, hasVoted = voted.has(t.id);
+  ideaCard.innerHTML = `
+    <div class="idea-card">
+      <div class="what"><b>${esc(t.text)}</b><span>${t.where !== "" ? esc(placeName(t.where)) + " · " : ""}${v} vote${v > 1 ? "s" : ""}${t.done ? " · réalisée" : ""}</span></div>
+      <div class="idea-actions">
+        <button class="act love" data-act="vote" ${hasVoted ? "disabled" : ""}>${hasVoted ? "♥ Vous avez voté" : "♥ Moi aussi"}</button>
+        <button class="act" data-act="done">${t.done ? "↺ Pas encore fait" : "✓ C'est fait"}</button>
+        <button class="act danger${confirmDel ? " confirm" : ""}" data-act="del">${confirmDel ? "Confirmer la suppression" : "Supprimer"}</button>
+        <button class="act" data-act="close" aria-label="Fermer">✕</button>
+      </div>
+    </div>`;
 }
 
 todoStop.innerHTML = `<option value="">Sans étape</option>` +
-  STOPS.map((s, i) => `<option value="${i}">${i + 1}. ${s.name}</option>` +
-    PASSAGES.map((p, j) => p.after === i ? `<option value="p${j}">↳ ${p.name}</option>` : "").join("")).join("");
+  PLACE_ORDER.map((w) => `<option value="${w}">${w.startsWith("p") ? "↳ " : +w + 1 + ". "}${placeName(w)}</option>`).join("");
 
-// Liste partagée via Firestore quand FIREBASE_CONFIG est renseigné, sinon liste locale au navigateur.
+// Envies partagées via Firestore quand FIREBASE_CONFIG est renseigné, sinon stockées dans le navigateur.
 // Cette config n'est pas secrète : ce sont les règles Firestore (firestore.rules) qui protègent les données.
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCIuFUc2u2lsAbVLKLe3pXlYBbeLSsu9QE",
@@ -800,26 +878,26 @@ const FIREBASE_CONFIG = {
 };
 let ideas = null;
 const todoHint = document.getElementById("todoHint");
+const SHARED_HINT = "Nuage partagé : tout le monde voit les mêmes envies, en direct.";
 const showError = (msg) => { todoHint.textContent = msg; todoHint.classList.add("err"); };
+const fail = () => showError("La modification n'a pas été enregistrée. Vérifiez votre connexion et réessayez.");
 
 if (FIREBASE_CONFIG && window.firebase) {
   firebase.initializeApp(FIREBASE_CONFIG);
   ideas = firebase.firestore().collection("idees");
-  todoHint.textContent = "Liste partagée : tout le monde voit et ajoute les mêmes idées, en direct.";
+  todoHint.textContent = SHARED_HINT;
   todos = [];
-  todoList.innerHTML = `<li class="todo-empty">Chargement des idées…</li>`;
+  cloud.innerHTML = `<p class="cloud-empty">Chargement des envies…</p>`;
   ideas.orderBy("createdAt").onSnapshot(
     (snap) => {
       todos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       todoHint.classList.remove("err");
-      todoHint.textContent = "Liste partagée : tout le monde voit et ajoute les mêmes idées, en direct.";
+      todoHint.textContent = SHARED_HINT;
       renderTodos();
     },
-    () => showError("Impossible de charger la liste partagée. Vérifiez votre connexion puis rechargez la page.")
+    () => showError("Impossible de charger les envies partagées. Vérifiez votre connexion puis rechargez la page.")
   );
 }
-
-const fail = () => showError("La modification n'a pas été enregistrée. Vérifiez votre connexion et réessayez.");
 
 todoForm.addEventListener("submit", (ev) => {
   ev.preventDefault();
@@ -828,36 +906,66 @@ todoForm.addEventListener("submit", (ev) => {
   if (ideas) {
     ideas.add({ text, where: todoStop.value, done: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(fail);
   } else {
-    todos.push({ id: Date.now().toString(36), text, where: todoStop.value, done: false });
+    todos.push({ id: Date.now().toString(36), text, where: todoStop.value, done: false, votes: 0 });
     saveTodos();
-    renderTodos();
   }
-  if (todoFilter === "done") setFilter("all");
+  if (todoFilter === "done") todoFilter = "all";
+  if (placeFilter && placeFilter !== todoStop.value) placeFilter = null;
+  syncFilterChips();
+  if (!ideas) renderTodos();
   todoText.value = "";
   todoText.focus();
 });
 
-todoList.addEventListener("change", (ev) => {
-  const t = todos.find((x) => x.id === ev.target.dataset.id);
-  if (!t) return;
-  if (ideas) return void ideas.doc(t.id).update({ done: ev.target.checked }).catch(fail);
-  t.done = ev.target.checked; saveTodos(); renderTodos();
-});
-todoList.addEventListener("click", (ev) => {
-  const b = ev.target.closest("[data-del]");
+cloud.addEventListener("click", (ev) => {
+  const b = ev.target.closest(".bubble");
   if (!b) return;
-  if (ideas) return void ideas.doc(b.dataset.del).delete().catch(fail);
-  todos = todos.filter((x) => x.id !== b.dataset.del); saveTodos(); renderTodos();
+  selId = selId === b.dataset.id ? null : b.dataset.id;
+  confirmDel = false;
+  renderTodos();
+  if (selId) ideaCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
 });
 
-function setFilter(f) {
-  todoFilter = f;
-  document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", c.dataset.f === f));
+ideaCard.addEventListener("click", (ev) => {
+  const a = ev.target.closest("[data-act]");
+  const t = todos.find((x) => x.id === selId);
+  if (!a || !t) return;
+  const act = a.dataset.act;
+  if (act === "close") { selId = null; confirmDel = false; return renderTodos(); }
+  if (act === "del" && !confirmDel) { confirmDel = true; return renderCard(); }
+  confirmDel = false;
+  if (act === "vote") {
+    if (voted.has(t.id)) return;
+    voted.add(t.id); saveVoted();
+    if (ideas) ideas.doc(t.id).update({ votes: firebase.firestore.FieldValue.increment(1) }).catch(() => { voted.delete(t.id); saveVoted(); fail(); renderCard(); });
+    else t.votes = (t.votes || 0) + 1;
+  } else if (act === "done") {
+    if (ideas) ideas.doc(t.id).update({ done: !t.done }).catch(fail);
+    else t.done = !t.done;
+  } else if (act === "del") {
+    selId = null;
+    if (ideas) ideas.doc(t.id).delete().catch(fail);
+    else todos = todos.filter((x) => x.id !== t.id);
+  }
+  if (!ideas) saveTodos();
   renderTodos();
+});
+
+function syncFilterChips() {
+  document.querySelectorAll(".filters .chip").forEach((c) => c.setAttribute("aria-pressed", c.dataset.f === todoFilter));
 }
 document.querySelector(".filters").addEventListener("click", (ev) => {
   const c = ev.target.closest(".chip");
-  if (c) setFilter(c.dataset.f);
+  if (!c) return;
+  todoFilter = c.dataset.f;
+  syncFilterChips();
+  renderTodos();
+});
+document.getElementById("places").addEventListener("click", (ev) => {
+  const c = ev.target.closest(".chip");
+  if (!c) return;
+  placeFilter = placeFilter === c.dataset.place ? null : c.dataset.place;
+  renderTodos();
 });
 
 if (!ideas) { todos = loadTodos(); renderTodos(); }
