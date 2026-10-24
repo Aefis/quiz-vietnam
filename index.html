@@ -163,6 +163,7 @@ h1 span { color: var(--lacquer); }
 .spot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .leaflet-tooltip { font-family: var(--font-body); font-weight: 600; }
 .leaflet-container { font-family: var(--font-body); }
+.tiles-dark { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9); }
 
 @keyframes rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: 0 0 0 0 transparent; } }
@@ -563,9 +564,9 @@ panel.addEventListener("click", (ev) => {
 function initMap() {
   const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
   map = L.map("map", { scrollWheelZoom: true, zoomSnap: 0.5 });
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, {
-    maxZoom: 19, subdomains: "abcd",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, className: dark ? "tiles-dark" : "",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
 
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--lacquer").trim();
