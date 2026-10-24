@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz Vietnam</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&family=Lora:ital,wght@1,500&display=swap">
+<style>
+/* Layout: une colonne centrée, carte de question unique façon laque rouge et or sur fond jade pâle */
+:root {
+  --bg: #eef3ef;
+  --surface: #ffffff;
+  --fg: #1d2a24;
+  --muted: #5b6b63;
+  --line: #d3ddd7;
+  --lacquer: #b3261e;
+  --gold: #c9971c;
+  --good: #1f7a4d;
+  --good-bg: #e2f3ea;
+  --bad: #b3261e;
+  --bad-bg: #fbe5e3;
+  --font-display: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-accent: "Lora", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111916; --surface: #18231f; --fg: #e6eee9; --muted: #9aaba2; --line: #2b3a33;
+    --lacquer: #e5584d; --gold: #e2b54a; --good: #5cc795; --good-bg: #173327; --bad: #f07a70; --bad-bg: #3a1c1a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111916; --surface: #18231f; --fg: #e6eee9; --muted: #9aaba2; --line: #2b3a33;
+  --lacquer: #e5584d; --gold: #e2b54a; --good: #5cc795; --good-bg: #173327; --bad: #f07a70; --bad-bg: #3a1c1a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 48px;
+}
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.flag { width: 42px; height: 28px; border-radius: 3px; background: #da251d; display: grid; place-items: center; flex: none; }
+.flag svg { width: 16px; height: 16px; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; }
+h1 span { color: var(--lacquer); }
+.score-pill { font-weight: 600; font-size: 0.9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.score-pill b { color: var(--fg); }
+.progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--lacquer), var(--gold)); transition: width .35s ease; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); font-weight: 600; font-variant-numeric: tabular-nums; }
+.question { font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; line-height: 1.35; margin: 0; text-wrap: balance; }
+.options { display: grid; gap: 10px; }
+.opt {
+  font: inherit; text-align: left; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line);
+  border-radius: 10px; padding: 12px 14px; cursor: pointer; display: flex; gap: 12px; align-items: center;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.opt:hover:not(:disabled) { border-color: var(--gold); }
+.opt:active:not(:disabled) { transform: scale(0.99); }
+.opt:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.opt .key { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 6px; border: 1px solid var(--line); font-size: 0.8rem; font-weight: 600; color: var(--muted); background: var(--surface); }
+.opt:disabled { cursor: default; }
+.opt.correct { border-color: var(--good); background: var(--good-bg); }
+.opt.correct .key { background: var(--good); color: var(--surface); border-color: var(--good); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.opt.wrong .key { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+.opt.dim { opacity: 0.55; }
+.explain { border-top: 1px dashed var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 8px; animation: rise .25s ease; }
+.verdict { font-weight: 800; font-size: 1.05rem; }
+.verdict.ok { color: var(--good); }
+.verdict.ko { color: var(--bad); }
+.explain p { margin: 0; color: var(--fg); }
+.actions { display: flex; justify-content: flex-end; }
+.btn {
+  font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 12px 20px; cursor: pointer;
+  background: var(--lacquer); color: #fff;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.result { text-align: center; align-items: center; }
+.big { font-family: var(--font-display); font-weight: 800; font-size: 3.4rem; line-height: 1; color: var(--lacquer); font-variant-numeric: tabular-nums; }
+.big small { font-size: 1.4rem; color: var(--muted); font-weight: 600; }
+.quote { font-family: var(--font-accent); font-style: italic; font-size: 1.1rem; color: var(--muted); margin: 0; max-width: 40ch; }
+.recap { width: 100%; display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+.recap span { aspect-ratio: 1; max-width: 100%; border-radius: 6px; display: grid; place-items: center; font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.recap .y { background: var(--good-bg); color: var(--good); }
+.recap .n { background: var(--bad-bg); color: var(--bad); }
+.hint { font-size: 0.8rem; color: var(--muted); text-align: center; }
+@keyframes rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media (max-width: 420px) { .card { padding: 18px; } .question { font-size: 1.15rem; } .recap { grid-template-columns: repeat(5, 1fr); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#ffcd00" d="M12 1.5l2.47 7.6h8l-6.47 4.7 2.47 7.6L12 16.7l-6.47 4.7 2.47-7.6L1.53 9.1h8z"/></svg></div>
+      <h1>Quiz <span>Vietnam</span></h1>
+    </div>
+    <div class="score-pill" id="scorePill">Score : <b id="score">0</b> / 20</div>
+  </header>
+  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+  <main id="app"></main>
+  <p class="hint">Astuce : touches 1 à 4 pour répondre, Entrée pour continuer.</p>
+</div>
+
+<script>
+const QUESTIONS = [
+  { q: "Quelle est la capitale du Vietnam ?", o: ["Hô Chi Minh-Ville", "Hanoï", "Da Nang", "Hué"], a: 1,
+    e: "Hanoï est la capitale du Vietnam réunifié depuis 1976. Elle se trouve dans le nord du pays, au bord du fleuve Rouge, et a fêté ses 1000 ans en 2010." },
+  { q: "Quelle est la plus grande ville du Vietnam ?", o: ["Hanoï", "Hô Chi Minh-Ville", "Hai Phong", "Can Tho"], a: 1,
+    e: "Hô Chi Minh-Ville, dans le sud, est la ville la plus peuplée (environ 9 millions d'habitants) et le grand centre économique du pays. Hanoï est la capitale, mais pas la plus grande ville." },
+  { q: "Quelle est la monnaie du Vietnam ?", o: ["Le baht", "Le yuan", "Le dông", "Le riel"], a: 2,
+    e: "La monnaie est le dông (VND). Les montants sont très élevés : 1 euro vaut environ 27 000 dôngs. Le baht est thaïlandais, le yuan chinois et le riel cambodgien." },
+  { q: "Quel plat vietnamien est une soupe de nouilles mondialement connue ?", o: ["Pad thaï", "Phở", "Ramen", "Laksa"], a: 1,
+    e: "Le phở est une soupe de nouilles de riz dans un bouillon parfumé (anis étoilé, cannelle, gingembre), servie avec du bœuf ou du poulet. Il est né dans le nord du Vietnam au début du XXe siècle." },
+  { q: "Quel site naturel célèbre est connu pour ses milliers d'îlots calcaires ?", o: ["La baie d'Ha Long", "Angkor Vat", "Les rizières de Banaue", "Krabi"], a: 0,
+    e: "La baie d'Ha Long compte près de 2 000 îles et îlots calcaires. Elle est classée au patrimoine mondial de l'UNESCO. « Ha Long » signifie « là où le dragon descend dans la mer »." },
+  { q: "Le Vietnam est l'un des plus grands exportateurs mondiaux de… ?", o: ["Thé", "Cacao", "Café", "Vanille"], a: 2,
+    e: "Le Vietnam est le 2e producteur de café au monde, derrière le Brésil, surtout de robusta. On y boit le célèbre cà phê sữa đá : café glacé au lait concentré sucré." },
+  { q: "Quel grand fleuve forme un delta dans le sud du pays ?", o: ["Le Gange", "Le Mékong", "Le Yangtsé", "L'Irrawaddy"], a: 1,
+    e: "Le Mékong prend sa source au Tibet et traverse six pays avant de former un immense delta au sud du Vietnam, connu pour ses rizières, ses vergers et ses marchés flottants." },
+  { q: "Quelles sont les couleurs du drapeau vietnamien ?", o: ["Rouge avec une étoile jaune", "Rouge et blanc", "Bleu, blanc, rouge", "Vert avec un cercle rouge"], a: 0,
+    e: "Le drapeau est rouge avec une étoile jaune à cinq branches au centre. Le rouge évoque la révolution, et les cinq branches représentent les ouvriers, paysans, soldats, intellectuels et jeunes." },
+  { q: "Quel pays a colonisé le Vietnam (Indochine française) ?", o: ["L'Angleterre", "L'Espagne", "La France", "Les Pays-Bas"], a: 2,
+    e: "La France a colonisé le Vietnam dans la seconde moitié du XIXe siècle, au sein de l'Indochine française. La présence française a pris fin en 1954 après la bataille de Diên Biên Phu." },
+  { q: "Quel chapeau traditionnel est un symbole du Vietnam ?", o: ["Le sombrero", "Le nón lá (chapeau conique)", "Le fez", "Le béret"], a: 1,
+    e: "Le nón lá est un chapeau conique en feuilles de palmier. Il protège du soleil comme de la pluie. Le nón bài thơ de Hué cache même des poèmes visibles par transparence." },
+  { q: "Sur quel continent se trouve le Vietnam ?", o: ["Afrique", "Asie", "Océanie", "Amérique"], a: 1,
+    e: "Le Vietnam est en Asie du Sud-Est, sur la péninsule indochinoise, avec une longue façade sur la mer de Chine méridionale (appelée « mer de l'Est » au Vietnam)." },
+  { q: "Quelle forme a le Vietnam sur une carte ?", o: ["Un rond", "Un carré", "Un « S » allongé", "Un triangle"], a: 2,
+    e: "Le pays a la forme d'un « S » étiré sur environ 1 650 km du nord au sud. Au plus étroit, il ne fait qu'une cinquantaine de kilomètres de large." },
+  { q: "Quel pays borde le Vietnam au nord ?", o: ["Le Laos", "Le Cambodge", "La Chine", "La Thaïlande"], a: 2,
+    e: "La Chine est au nord. Le Laos est à l'ouest (c'est d'ailleurs la frontière la plus longue) et le Cambodge au sud-ouest. Le Vietnam n'a pas de frontière avec la Thaïlande." },
+  { q: "Quelle est la langue officielle du Vietnam ?", o: ["Le chinois", "Le thaï", "Le vietnamien", "Le khmer"], a: 2,
+    e: "On parle vietnamien, une langue à 6 tons. Il s'écrit avec l'alphabet latin et de nombreux accents (le quốc ngữ), un système mis au point au XVIIe siècle par des missionnaires, dont le Français Alexandre de Rhodes." },
+  { q: "Quel est le nom de la fête du Nouvel An lunaire au Vietnam ?", o: ["Diwali", "Têt", "Songkran", "Hanami"], a: 1,
+    e: "Le Têt (Tết Nguyên Đán) est la fête la plus importante de l'année, entre fin janvier et mi-février. On se retrouve en famille, on honore les ancêtres et on offre des enveloppes rouges." },
+  { q: "Quel sandwich d'inspiration française est très populaire au Vietnam ?", o: ["Le croque-monsieur", "Le bánh mì", "Le panini", "Le kebab"], a: 1,
+    e: "Le bánh mì est une baguette héritée de l'époque française, garnie à la vietnamienne : pâté, viande, légumes marinés, coriandre et piment." },
+  { q: "Quel moyen de transport domine dans les rues des villes vietnamiennes ?", o: ["Le vélo", "Le tramway", "Le scooter", "La voiture"], a: 2,
+    e: "Le Vietnam compte plus de 70 millions de deux-roues motorisés. Dans les villes, des flots de scooters transportent familles entières, marchandises et même des animaux." },
+  { q: "Quelle céréale le Vietnam cultive-t-il en grande quantité, au point d'en être l'un des premiers exportateurs mondiaux ?", o: ["Le blé", "Le maïs", "Le riz", "L'orge"], a: 2,
+    e: "Le riz est au cœur de l'agriculture et de la cuisine. Le Vietnam figure parmi les trois premiers exportateurs mondiaux, grâce aux deltas du Mékong et du fleuve Rouge." },
+  { q: "Quel était le nom d'Hô Chi Minh-Ville avant 1976 ?", o: ["Hanoï", "Saïgon", "Hué", "Tourane"], a: 1,
+    e: "La ville s'appelait Saïgon. Elle a été renommée en 1976 en l'honneur d'Hô Chi Minh, après la réunification. Beaucoup d'habitants disent encore « Saïgon »." },
+  { q: "Quelle guerre célèbre a opposé le Vietnam aux États-Unis ?", o: ["La guerre de Corée", "La guerre du Vietnam", "La guerre froide", "La guerre de l'opium"], a: 1,
+    e: "La guerre du Vietnam (environ 1955-1975) a opposé le Nord communiste au Sud soutenu par les États-Unis. Elle s'est terminée par la chute de Saïgon le 30 avril 1975. Au Vietnam, on l'appelle la « guerre américaine »." },
+];
+
+const app = document.getElementById("app");
+const bar = document.getElementById("bar");
+const scoreEl = document.getElementById("score");
+let state;
+
+function render() {
+  scoreEl.textContent = state.score;
+  bar.style.width = (state.answers.length / QUESTIONS.length * 100) + "%";
+  if (state.i >= QUESTIONS.length) return renderResult();
+
+  const item = QUESTIONS[state.i];
+  const picked = state.answers[state.i];
+  const answered = picked !== undefined;
+
+  app.innerHTML = `
+    <section class="card">
+      <div class="eyebrow">Question ${state.i + 1} / ${QUESTIONS.length}</div>
+      <h2 class="question">${item.q}</h2>
+      <div class="options">
+        ${item.o.map((txt, k) => {
+          let cls = "opt";
+          if (answered) {
+            if (k === item.a) cls += " correct";
+            else if (k === picked) cls += " wrong";
+            else cls += " dim";
+          }
+          return `<button class="${cls}" id="opt-${k}" data-k="${k}" ${answered ? "disabled" : ""}><span class="key">${k + 1}</span><span>${txt}</span></button>`;
+        }).join("")}
+      </div>
+      ${answered ? `
+        <div class="explain" aria-live="polite">
+          <div class="verdict ${picked === item.a ? "ok" : "ko"}">${picked === item.a ? "Bonne réponse !" : "Raté… la bonne réponse : " + item.o[item.a]}</div>
+          <p>${item.e}</p>
+        </div>
+        <div class="actions"><button class="btn" id="next">${state.i + 1 < QUESTIONS.length ? "Question suivante" : "Voir mon score"}</button></div>
+      ` : ""}
+    </section>`;
+
+  if (answered) document.getElementById("next").focus();
+}
+
+function renderResult() {
+  const s = state.score, n = QUESTIONS.length;
+  const msg = s === n ? "Parfait ! Vous connaissez le Vietnam sur le bout des baguettes."
+    : s >= 15 ? "Excellent, vous êtes prêt pour un voyage de Hanoï à Saïgon."
+    : s >= 10 ? "Pas mal ! Encore quelques bols de phở et ce sera parfait."
+    : "Un bon début. Retentez votre chance, les explications vous aideront.";
+  app.innerHTML = `
+    <section class="card result">
+      <div class="eyebrow">Résultat</div>
+      <div class="big">${s}<small> / ${n}</small></div>
+      <p class="quote">${msg}</p>
+      <div class="recap">${state.answers.map((p, k) => `<span class="${p === QUESTIONS[k].a ? "y" : "n"}" title="Question ${k + 1}">${k + 1}</span>`).join("")}</div>
+      <button class="btn" id="restart">Rejouer</button>
+    </section>`;
+  document.getElementById("restart").focus();
+}
+
+function choose(k) {
+  if (state.i >= QUESTIONS.length || state.answers[state.i] !== undefined) return;
+  state.answers[state.i] = k;
+  if (k === QUESTIONS[state.i].a) state.score++;
+  render();
+}
+
+function next() {
+  if (state.answers[state.i] === undefined) return;
+  state.i++;
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+app.addEventListener("click", (ev) => {
+  const opt = ev.target.closest(".opt");
+  if (opt) return choose(Number(opt.dataset.k));
+  if (ev.target.closest("#next")) return next();
+  if (ev.target.closest("#restart")) { state = { i: 0, score: 0, answers: [] }; render(); }
+});
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.key >= "1" && ev.key <= "4") choose(Number(ev.key) - 1);
+  else if (ev.key === "Enter" && document.activeElement?.id !== "next" && document.activeElement?.id !== "restart") next();
+});
+
+function start(saved) {
+  state = saved && Array.isArray(saved.answers) ? saved : { i: 0, score: 0, answers: [] };
+  render();
+}
+window.claude?.hot?.snapshot?.(() => state);
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
