@@ -222,7 +222,7 @@ h1 span { color: var(--lacquer); }
     </div>
     <div class="legend">
       <span><i class="dot red"></i>Étape du parcours (cliquer pour le détail)</span>
-      <span><i class="dot gold"></i>Lieu noté dans le carnet</span>
+      <span><i class="dot gold"></i>Lieu noté dans le carnet, relié à son étape</span>
     </div>
   </section>
 </div>
@@ -587,8 +587,11 @@ function initMap() {
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--lacquer").trim();
   L.polyline(STOPS.map((s) => s.ll), { color: accent, weight: 3, opacity: 0.8, dashArray: "6 8" }).addTo(map);
 
+  const gold = getComputedStyle(document.documentElement).getPropertyValue("--gold").trim();
   STOPS.forEach((s, i) => {
     s.carnet.forEach((p, k) => {
+      // Trait fin reliant le lieu du carnet à son étape
+      L.polyline([s.ll, p.ll], { color: gold, weight: 2, opacity: 0.9, interactive: false }).addTo(map);
       L.marker(p.ll, { icon: L.divIcon({ className: "", html: '<div class="spot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }) })
         .bindTooltip(p.name, { direction: "top", offset: [0, -8] })
         .on("click", () => { renderStop(i, k); map.flyTo(p.ll, 14, { duration: 0.8 }); })
