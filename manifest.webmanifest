@@ -1,0 +1,16 @@
+{
+  "name": "Quiz Vietnam",
+  "short_name": "Vietnam",
+  "description": "Quiz, itinéraire, envies et checklist pour le voyage au Vietnam.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3ef",
+  "theme_color": "#b3261e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

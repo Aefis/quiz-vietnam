@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quiz Vietnam</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#b3261e">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vietnam">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&family=Lora:ital,wght@1,500&display=swap">
@@ -231,6 +239,31 @@ select.act { max-width: 100%; }
 .hint.err { color: var(--bad); font-weight: 600; }
 @keyframes pop { from { transform: scale(0.6); opacity: 0; } }
 
+/* ---------- Checklist ---------- */
+.check { max-width: 960px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.check-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; align-items: start; }
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.group-head h3 { margin: 0; font-size: 1rem; font-family: var(--font-display); }
+.group-head span { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.group.complete .group-head span { color: var(--good); font-weight: 600; }
+.group ul { list-style: none; margin: 0; padding: 4px 0; }
+.citem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 7px 10px 7px 16px; }
+.citem input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--good); cursor: pointer; }
+.citem label { cursor: pointer; overflow-wrap: anywhere; }
+.citem label small { display: block; color: var(--muted); font-size: 0.8rem; }
+.citem.done label { text-decoration: line-through; color: var(--muted); }
+.citem .x { font: inherit; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 0 6px; border-radius: 6px; opacity: 0; }
+.citem:hover .x, .citem .x:focus-visible { opacity: 1; }
+.citem .x:hover { color: var(--bad); background: var(--bad-bg); }
+.citem .x:focus-visible { outline: 3px solid var(--gold); }
+@media (hover: none) { .citem .x { opacity: 1; } }
+.check-foot { display: flex; justify-content: flex-end; }
+.net {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; text-align: center; font-size: 0.85rem; font-weight: 600;
+  background: var(--fg); color: var(--bg); padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+
 @media (max-width: 860px) {
   .trip-body { grid-template-columns: minmax(0, 1fr); }
   #map { height: 55vh; min-height: 320px; }
@@ -253,6 +286,7 @@ select.act { max-width: 100%; }
       <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Quiz</button>
       <button class="tab" role="tab" id="tab-carte" aria-controls="view-carte" aria-selected="false">Itinéraire</button>
       <button class="tab" role="tab" id="tab-todo" aria-controls="view-todo" aria-selected="false">Envies</button>
+      <button class="tab" role="tab" id="tab-check" aria-controls="view-check" aria-selected="false">Checklist</button>
     </nav>
   </header>
 
@@ -310,7 +344,26 @@ select.act { max-width: 100%; }
     <div id="ideaCard" aria-live="polite"></div>
     <p class="hint" id="todoHint">La liste est enregistrée dans ce navigateur, sur cet appareil.</p>
   </section>
+
+  <section id="view-check" role="tabpanel" aria-labelledby="tab-check" class="check" hidden>
+    <div class="todo-head">
+      <h2>Checklist départ</h2>
+      <span class="score-pill" id="checkCount"></span>
+      <p>Votre préparation personnelle : ce que vous cochez reste sur cet appareil.</p>
+    </div>
+    <div class="progress" aria-hidden="true"><i id="checkBar"></i></div>
+    <form class="todo-form" id="checkForm" autocomplete="off">
+      <input type="text" id="checkText" placeholder="Ex. : Acheter une gourde filtrante" aria-label="Nouvel élément" maxlength="120" required>
+      <select id="checkCat" aria-label="Catégorie"></select>
+      <button class="btn" type="submit">Ajouter</button>
+    </form>
+    <div class="check-groups" id="checkGroups"></div>
+    <div class="check-foot">
+      <button class="back" id="checkReset">Remettre la liste de départ</button>
+    </div>
+  </section>
 </div>
+<div class="net" id="netBanner" role="status" hidden>Hors connexion : le site fonctionne. Les envies ajoutées seront envoyées au retour du réseau.</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
@@ -713,16 +766,16 @@ function initMap() {
   map = L.map("map", { scrollWheelZoom: true, zoomSnap: 0.5 });
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--lacquer").trim();
   const plan = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, className: dark ? "tiles-dark" : "",
+    maxZoom: 19, crossOrigin: true, className: dark ? "tiles-dark" : "",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
   // Vue satellite Esri + couche de noms de lieux par-dessus
   const satellite = L.layerGroup([
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-      maxZoom: 19, attribution: "Imagerie &copy; Esri, Maxar, Earthstar Geographics",
+      maxZoom: 19, crossOrigin: true, attribution: "Imagerie &copy; Esri, Maxar, Earthstar Geographics",
     }),
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
-      maxZoom: 19,
+      maxZoom: 19, crossOrigin: true,
     }),
   ]);
   L.control.layers({ "Plan": plan, "Satellite": satellite }, null, { collapsed: false, position: "topright" }).addTo(map);
@@ -876,7 +929,10 @@ const fail = () => showError("La modification n'a pas été enregistrée. Vérif
 
 if (FIREBASE_CONFIG && window.firebase) {
   firebase.initializeApp(FIREBASE_CONFIG);
-  ideas = firebase.firestore().collection("idees");
+  const fdb = firebase.firestore();
+  // Garde les envies en mémoire sur l'appareil et met en file les modifications faites hors connexion
+  fdb.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  ideas = fdb.collection("idees");
   todoHint.textContent = SHARED_HINT;
   todos = [];
   cloud.innerHTML = `<p class="cloud-empty">Chargement des envies…</p>`;
@@ -967,9 +1023,129 @@ document.getElementById("places").addEventListener("click", (ev) => {
 
 if (!ideas) { todos = loadTodos(); renderTodos(); }
 
+/* =================== CHECKLIST =================== */
+const CHECK_KEY = "vietnam-checklist-v1";
+const CHECK_START = {
+  "Documents": [
+    ["Passeport valide au moins 6 mois après le retour"],
+    ["Visa : vérifier l'exemption ou faire l'e-visa", "Exemption de 45 jours pour les Français, sinon e-visa sur evisa.gov.vn"],
+    ["Billets d'avion aller (Hanoï) et retour (Hô Chi Minh-Ville)"],
+    ["Vols intérieurs Đà Nẵng → Phú Quốc → Hô Chi Minh-Ville"],
+    ["Assurance voyage (avec rapatriement)"],
+    ["Permis international", "Si vous comptez conduire un scooter"],
+    ["Copies des papiers (photo + cloud)"],
+  ],
+  "Santé": [
+    ["Vaccins à jour (DTP, hépatites A et B)", "Voir son médecin 1 à 2 mois avant"],
+    ["Anti-moustique tropical"],
+    ["Crème solaire et lunettes de soleil"],
+    ["Trousse de pharmacie (anti-diarrhéique, pansements, désinfectant)"],
+    ["Médicaments personnels et ordonnances"],
+  ],
+  "Argent": [
+    ["Carte bancaire sans frais à l'étranger"],
+    ["Prévenir sa banque du voyage"],
+    ["Un peu d'euros ou de dollars en liquide"],
+  ],
+  "Téléphone": [
+    ["eSIM ou carte SIM vietnamienne"],
+    ["Installer Grab (taxis et scooters)"],
+    ["Télécharger le vietnamien dans Google Traduction (hors ligne)"],
+    ["Télécharger les cartes Google Maps hors ligne"],
+    ["Ouvrir ce site une fois avec du réseau et l'ajouter à l'écran d'accueil"],
+    ["Batterie externe"],
+    ["Adaptateur de prise", "Prises A et C : les fiches françaises rentrent souvent, pas toujours"],
+  ],
+  "Valise": [
+    ["Vêtements légers"],
+    ["Pull et veste chaude", "Pour Sapa et Ha Giang, où il fait frais"],
+    ["K-way ou poncho"],
+    ["Chaussures de marche"],
+    ["Chaussures qui peuvent être mouillées", "Pour les grottes de Phong Nha"],
+    ["Maillot de bain"],
+    ["Sac étanche"],
+    ["Lampe frontale"],
+  ],
+};
+const checkGroups = document.getElementById("checkGroups");
+const checkCat = document.getElementById("checkCat");
+let checks;
+
+function defaultChecks() {
+  return Object.entries(CHECK_START).flatMap(([cat, items]) =>
+    items.map(([text, note], i) => ({ id: cat + i, cat, text, note: note || "", done: false })));
+}
+function loadChecks() {
+  try { const raw = localStorage.getItem(CHECK_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return defaultChecks();
+}
+const saveChecks = () => { try { localStorage.setItem(CHECK_KEY, JSON.stringify(checks)); } catch (e) {} };
+
+function renderChecks() {
+  const done = checks.filter((c) => c.done).length;
+  document.getElementById("checkCount").innerHTML = `<b>${done}</b> / ${checks.length} prêt${done > 1 ? "s" : ""}`;
+  document.getElementById("checkBar").style.width = (checks.length ? done / checks.length * 100 : 0) + "%";
+  const cats = [...new Set([...Object.keys(CHECK_START), ...checks.map((c) => c.cat)])];
+  checkGroups.innerHTML = cats.map((cat) => {
+    const items = checks.filter((c) => c.cat === cat);
+    if (!items.length) return "";
+    const n = items.filter((c) => c.done).length;
+    return `<section class="group${n === items.length ? " complete" : ""}">
+      <div class="group-head"><h3>${esc(cat)}</h3><span>${n === items.length ? "✓ Prêt" : `${n} / ${items.length}`}</span></div>
+      <ul>${items.map((c) => `
+        <li class="citem${c.done ? " done" : ""}">
+          <input type="checkbox" id="chk-${esc(c.id)}" data-id="${esc(c.id)}" ${c.done ? "checked" : ""}>
+          <label for="chk-${esc(c.id)}">${esc(c.text)}${c.note ? `<small>${esc(c.note)}</small>` : ""}</label>
+          <button class="x" data-del="${esc(c.id)}" aria-label="Retirer « ${esc(c.text)} »">×</button>
+        </li>`).join("")}</ul>
+    </section>`;
+  }).join("");
+}
+
+checkCat.innerHTML = Object.keys(CHECK_START).map((c) => `<option>${c}</option>`).join("");
+document.getElementById("checkForm").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const input = document.getElementById("checkText");
+  const text = input.value.trim();
+  if (!text) return;
+  checks.push({ id: "u" + Date.now().toString(36), cat: checkCat.value, text, note: "", done: false });
+  saveChecks(); renderChecks();
+  input.value = ""; input.focus();
+});
+checkGroups.addEventListener("change", (ev) => {
+  const c = checks.find((x) => x.id === ev.target.dataset.id);
+  if (c) { c.done = ev.target.checked; saveChecks(); renderChecks(); }
+});
+checkGroups.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-del]");
+  if (b) { checks = checks.filter((x) => x.id !== b.dataset.del); saveChecks(); renderChecks(); }
+});
+// Remise à zéro en deux clics (les boîtes de dialogue sont évitées)
+const checkReset = document.getElementById("checkReset");
+let resetArmed = false;
+checkReset.addEventListener("click", () => {
+  if (!resetArmed) { resetArmed = true; checkReset.textContent = "Confirmer : tout décocher et remettre la liste de départ"; return; }
+  resetArmed = false; checkReset.textContent = "Remettre la liste de départ";
+  checks = defaultChecks(); saveChecks(); renderChecks();
+});
+checkReset.addEventListener("blur", () => { resetArmed = false; checkReset.textContent = "Remettre la liste de départ"; });
+
+checks = loadChecks();
+renderChecks();
+
+/* =================== HORS CONNEXION =================== */
+const netBanner = document.getElementById("netBanner");
+const updateNet = () => { netBanner.hidden = navigator.onLine; };
+window.addEventListener("online", updateNet);
+window.addEventListener("offline", updateNet);
+updateNet();
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
 /* =================== ONGLETS =================== */
-const tabs = { quiz: document.getElementById("tab-quiz"), carte: document.getElementById("tab-carte"), todo: document.getElementById("tab-todo") };
-const views = { quiz: document.getElementById("view-quiz"), carte: document.getElementById("view-carte"), todo: document.getElementById("view-todo") };
+const tabs = { quiz: document.getElementById("tab-quiz"), carte: document.getElementById("tab-carte"), todo: document.getElementById("tab-todo"), check: document.getElementById("tab-check") };
+const views = { quiz: document.getElementById("view-quiz"), carte: document.getElementById("view-carte"), todo: document.getElementById("view-todo"), check: document.getElementById("view-check") };
 
 function showTab(name) {
   for (const k in tabs) {
