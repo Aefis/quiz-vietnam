@@ -164,6 +164,11 @@ h1 span { color: var(--lacquer); }
 .leaflet-tooltip { font-family: var(--font-body); font-weight: 600; }
 .leaflet-container { font-family: var(--font-body); }
 .tiles-dark { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9); }
+.leaflet-control-layers { background: var(--surface); color: var(--fg); border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: 0 2px 8px rgba(0,0,0,.2) !important; }
+.leaflet-control-layers-expanded { padding: 6px 10px; }
+.leaflet-control-layers-base { display: flex; gap: 12px; }
+.leaflet-control-layers-base label { font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+.leaflet-control-layers-base input { accent-color: var(--lacquer); margin-right: 4px; }
 
 @keyframes rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: 0 0 0 0 transparent; } }
@@ -564,10 +569,20 @@ panel.addEventListener("click", (ev) => {
 function initMap() {
   const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
   map = L.map("map", { scrollWheelZoom: true, zoomSnap: 0.5 });
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const plan = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19, className: dark ? "tiles-dark" : "",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
+  // Vue satellite Esri + couche de noms de lieux par-dessus
+  const satellite = L.layerGroup([
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19, attribution: "Imagerie &copy; Esri, Maxar, Earthstar Geographics",
+    }),
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19,
+    }),
+  ]);
+  L.control.layers({ "Plan": plan, "Satellite": satellite }, null, { collapsed: false, position: "topright" }).addTo(map);
 
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--lacquer").trim();
   L.polyline(STOPS.map((s) => s.ll), { color: accent, weight: 3, opacity: 0.8, dashArray: "6 8" }).addTo(map);
