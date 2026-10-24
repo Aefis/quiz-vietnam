@@ -160,6 +160,9 @@ h1 span { color: var(--lacquer); }
 /* Marqueurs Leaflet */
 .pin { width: 32px; height: 32px; border-radius: 50%; background: var(--lacquer); color: #fff; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); display: grid; place-items: center; font: 800 14px var(--font-display); }
 .pin.active { background: var(--gold); color: #1d2a24; transform: scale(1.15); }
+.pass { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 4px solid var(--lacquer); box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.num.hollow { background: var(--surface); border: 4px solid var(--lacquer); width: 20px; height: 20px; margin: 6px; }
+.dot.hollow { background: var(--surface); border: 3px solid var(--lacquer); }
 .spot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .leaflet-tooltip { font-family: var(--font-body); font-weight: 600; }
 .leaflet-container { font-family: var(--font-body); }
@@ -213,7 +216,7 @@ h1 span { color: var(--lacquer); }
       <div class="legs">
         <span class="leg">Aller : <b>Hanoï</b></span>
         <span class="leg">Retour : <b>Hô Chi Minh-Ville</b></span>
-        <span class="leg"><b>8</b> étapes, du nord au sud</span>
+        <span class="leg"><b>8</b> étapes et <b>2</b> villes de passage, du nord au sud</span>
       </div>
     </div>
     <div class="trip-body">
@@ -222,6 +225,7 @@ h1 span { color: var(--lacquer); }
     </div>
     <div class="legend">
       <span><i class="dot red"></i>Étape du parcours (cliquer pour le détail)</span>
+      <span><i class="dot hollow"></i>Ville de passage (sur le trajet, pas une étape)</span>
       <span><i class="dot gold"></i>Lieu noté dans le carnet, relié à son étape</span>
     </div>
   </section>
@@ -396,7 +400,7 @@ const STOPS = [
     intro: "Point de départ de la célèbre « boucle de Ha Giang » : 3 à 4 jours de routes de montagne spectaculaires jusqu'à la frontière chinoise.",
     travel: "Depuis Sapa : bus d'environ 6 à 7 h.",
     carnet: [
-      { name: "Col de Mã Pí Lèng", ll: [23.2297, 105.4097], text: "Le passage le plus impressionnant de la boucle : une route en corniche au-dessus du canyon de la rivière Nho Que, à couper le souffle." },
+      { name: "Col de Mã Pí Lèng", ll: [23.2356, 105.4244], text: "Le passage le plus impressionnant de la boucle : une route en corniche au-dessus du canyon de la rivière Nho Que, à couper le souffle." },
     ],
     aussi: [
       { name: "Rivière Nho Que et canyon de Tu San", text: "Balade en bateau au fond du canyon, eau couleur jade." },
@@ -411,9 +415,10 @@ const STOPS = [
     intro: "Des pitons calcaires au milieu des rizières et des rivières. On l'appelle souvent la « baie d'Ha Long terrestre ».",
     travel: "Depuis Ha Giang : bus couchette via Hanoï (environ 7 à 8 h).",
     carnet: [
-      { name: "Tràng An", ll: [20.2560, 105.8970], text: "Balade de 2 à 3 h en barque à rames entre les falaises, à travers des grottes et jusqu'à des temples. Classé à l'UNESCO." },
-      { name: "Hang Múa", ll: [20.2297, 105.9365], text: "Environ 500 marches jusqu'au sommet, avec un dragon de pierre et une vue magnifique sur Tam Coc. Allez-y au coucher du soleil." },
+      { name: "Tràng An", ll: [20.2743, 105.9127], text: "Balade de 2 à 3 h en barque à rames entre les falaises, à travers des grottes et jusqu'à des temples. Classé à l'UNESCO." },
+      { name: "Hang Múa", ll: [20.2287, 105.9317], text: "Environ 500 marches jusqu'au sommet, avec un dragon de pierre et une vue magnifique sur Tam Coc. Allez-y au coucher du soleil." },
       { name: "Baie de Lan Hạ (près d'Ha Long)", ll: [20.745, 107.085], text: "La voisine plus calme de la baie d'Ha Long, au large de l'île de Cat Ba : croisière, kayak et plages cachées. Compter environ 3 h de route depuis Ninh Binh." },
+      { name: "Baie d'Ha Long", ll: [20.9101, 107.1839], text: "Près de 2 000 îlots calcaires classés à l'UNESCO. Plus fréquentée que Lan Hạ : une croisière d'une nuit permet de profiter des deux baies, qui se touchent." },
     ],
     aussi: [
       { name: "Tam Cốc", text: "Balade en barque entre les rizières, les rameurs pagaient avec les pieds." },
@@ -439,7 +444,7 @@ const STOPS = [
   {
     name: "Hội An", vn: "Hội An", tag: "Ville des lanternes", ll: [15.8801, 108.3380], zoom: 13,
     intro: "Ancien port marchand aux maisons jaunes et aux lanternes colorées, entre rizières et plages.",
-    travel: "Depuis Phong Nha : train de Dong Hoi à Da Nang (environ 5 à 6 h), puis 45 min de route.",
+    travel: "Depuis Phong Nha, en passant par Huế et Đà Nẵng (voir les villes de passage). Đà Nẵng est à 45 min de route.",
     carnet: [
       { name: "Cẩm Thanh", ll: [15.8770, 108.3660], text: "La forêt de cocotiers d'eau, qu'on visite en panier rond en bambou (thúng chai), avec des rameurs qui font tourner les paniers." },
       { name: "Plage d'An Bàng", ll: [15.9140, 108.3420], text: "Belle plage de sable à 4 km de la vieille ville, avec des bars de plage décontractés. Parfaite pour une fin de journée." },
@@ -485,6 +490,34 @@ const STOPS = [
   },
 ];
 
+// Villes de passage (liste Google Maps) : sur le tracé, mais pas des étapes numérotées. "after" = index de l'étape précédente.
+const PASSAGES = [
+  {
+    name: "Huế", vn: "Huế", after: 4, ll: [16.4637, 107.5909], zoom: 13,
+    intro: "L'ancienne capitale impériale de la dynastie Nguyễn (1802-1945), au bord de la rivière des Parfums.",
+    travel: "Depuis Phong Nha : bus ou train depuis Dong Hoi (environ 3 à 4 h).",
+    aussi: [
+      { name: "Cité impériale", text: "Citadelle, Cité pourpre interdite et palais, classés à l'UNESCO." },
+      { name: "Tombeaux impériaux", text: "Ceux de Tự Đức, Minh Mạng et Khải Định, dans les collines autour de la ville." },
+      { name: "Pagode Thiên Mụ", text: "Tour de sept étages au bord de la rivière des Parfums." },
+      { name: "Bún bò Huế", text: "Soupe de nouilles épicée à la citronnelle, la spécialité de la ville." },
+    ],
+    tip: "Entre Huế et Đà Nẵng, la route du col des Nuages (Hải Vân) offre l'une des plus belles vues côtières du pays.",
+  },
+  {
+    name: "Đà Nẵng", vn: "Đà Nẵng", after: 4, ll: [16.0545, 108.2022], zoom: 12,
+    intro: "Grande ville balnéaire et moderne, à 30 min de Hội An. Son aéroport sert aussi pour le vol vers Phú Quốc.",
+    travel: "Depuis Huế : environ 2 h 30 par la route ou en train.",
+    aussi: [
+      { name: "Pont du Dragon", text: "Il crache du feu et de l'eau les samedis et dimanches à 21 h." },
+      { name: "Montagnes de Marbre", text: "Cinq collines avec grottes, pagodes et points de vue." },
+      { name: "Ba Na Hills et le Pont d'Or", text: "Passerelle dorée tenue par deux mains géantes, accessible en téléphérique." },
+      { name: "Plage de My Khe", text: "Longue plage de sable en pleine ville." },
+    ],
+    tip: "Đà Nẵng et Hội An sont si proches qu'on peut visiter l'une depuis l'autre.",
+  },
+];
+
 const panel = document.getElementById("panel");
 let map, stopMarkers = [], activeStop = -1;
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -501,7 +534,12 @@ function renderList() {
             <span class="num">${i + 1}</span>
             <span><span class="t">${s.name}</span><span class="s">${s.tag}</span></span>
             <span class="arrow" aria-hidden="true">›</span>
-          </button></li>`).join("")}
+          </button></li>` + PASSAGES.map((p, j) => p.after !== i ? "" : `
+          <li><button class="stop-btn" id="pass-${j}" data-p="${j}">
+            <span class="num hollow"></span>
+            <span><span class="t">${p.name}</span><span class="s">Ville de passage</span></span>
+            <span class="arrow" aria-hidden="true">›</span>
+          </button></li>`).join("")).join("")}
       </ol>
       <p class="tip">Cliquez sur une étape (ici ou sur la carte) pour voir les lieux à visiter.</p>
     </div>`;
@@ -541,6 +579,26 @@ function renderStop(i, focusPlace) {
   document.getElementById("back").focus({ preventScroll: true });
 }
 
+function renderPassage(j) {
+  const p = PASSAGES[j];
+  stopMarkers.forEach((m) => m.getElement()?.querySelector(".pin")?.classList.remove("active"));
+  panel.innerHTML = `
+    <div class="panel-inner">
+      <button class="back" id="back">‹ Toutes les étapes</button>
+      <div class="detail-title">
+        <span class="num hollow"></span>
+        <div><div class="badge">Ville de passage</div><h3>${p.name}</h3></div>
+      </div>
+      <p class="intro">${p.intro}</p>
+      <p class="travel">${p.travel}</p>
+      <div class="section-label">À voir en passant</div>
+      ${p.aussi.map((a) => `<div class="place"><h4>${a.name}</h4><p>${a.text}</p></div>`).join("")}
+      <p class="tip">${p.tip}</p>
+    </div>`;
+  panel.scrollTop = 0;
+  document.getElementById("back").focus({ preventScroll: true });
+}
+
 function flyToStop(i) {
   const s = STOPS[i];
   const pts = [s.ll, ...s.carnet.map((p) => p.ll)];
@@ -554,6 +612,7 @@ function showOverview() {
 
 panel.addEventListener("click", (ev) => {
   const stop = ev.target.closest(".stop-btn");
+  if (stop && stop.dataset.p !== undefined) { const j = +stop.dataset.p; renderPassage(j); map.flyTo(PASSAGES[j].ll, PASSAGES[j].zoom, { duration: 0.8 }); return; }
   if (stop) { const i = +stop.dataset.i; renderStop(i); flyToStop(i); return; }
   const go = ev.target.closest("[data-go]");
   if (go) { const i = +go.dataset.go; renderStop(i); flyToStop(i); return; }
@@ -592,7 +651,16 @@ function initMap() {
   }).addTo(map);
   L.polygon(VN_SHAPE, { color: accent, weight: 2.5, opacity: 0.9, fill: false, interactive: false }).addTo(map);
 
-  L.polyline(STOPS.map((s) => s.ll), { color: accent, weight: 3, opacity: 0.8, dashArray: "6 8" }).addTo(map);
+  // Tracé : étapes dans l'ordre, en passant par les villes de passage
+  const routeLL = STOPS.flatMap((s, i) => [s.ll, ...PASSAGES.filter((p) => p.after === i).map((p) => p.ll)]);
+  L.polyline(routeLL, { color: accent, weight: 3, opacity: 0.8, dashArray: "6 8" }).addTo(map);
+
+  PASSAGES.forEach((p, j) => {
+    L.marker(p.ll, { icon: L.divIcon({ className: "", html: '<div class="pass"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 500 })
+      .bindTooltip(`${p.name} (passage)`, { direction: "right", offset: [10, 0] })
+      .on("click", () => { renderPassage(j); map.flyTo(p.ll, p.zoom, { duration: 0.8 }); })
+      .addTo(map);
+  });
 
   const gold = getComputedStyle(document.documentElement).getPropertyValue("--gold").trim();
   STOPS.forEach((s, i) => {
