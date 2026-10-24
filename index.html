@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quiz Vietnam</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&family=Lora:ital,wght@1,500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-/* Layout: une colonne centrée, carte de question unique façon laque rouge et or sur fond jade pâle */
+/* Layout: en-tête avec onglets ; onglet Quiz en colonne centrée, onglet Itinéraire en carte + panneau latéral (empilés sur mobile) */
 :root {
   --bg: #eef3ef;
   --surface: #ffffff;
@@ -18,6 +18,7 @@
   --line: #d3ddd7;
   --lacquer: #b3261e;
   --gold: #c9971c;
+  --gold-soft: #f6ecd2;
   --good: #1f7a4d;
   --good-bg: #e2f3ea;
   --bad: #b3261e;
@@ -25,33 +26,46 @@
   --font-display: "Be Vietnam Pro", system-ui, sans-serif;
   --font-body: "Be Vietnam Pro", system-ui, sans-serif;
   --font-accent: "Lora", Georgia, serif;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #111916; --surface: #18231f; --fg: #e6eee9; --muted: #9aaba2; --line: #2b3a33;
-    --lacquer: #e5584d; --gold: #e2b54a; --good: #5cc795; --good-bg: #173327; --bad: #f07a70; --bad-bg: #3a1c1a;
+    --lacquer: #e5584d; --gold: #e2b54a; --gold-soft: #2e2817; --good: #5cc795; --good-bg: #173327; --bad: #f07a70; --bad-bg: #3a1c1a;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #111916; --surface: #18231f; --fg: #e6eee9; --muted: #9aaba2; --line: #2b3a33;
-  --lacquer: #e5584d; --gold: #e2b54a; --good: #5cc795; --good-bg: #173327; --bad: #f07a70; --bad-bg: #3a1c1a;
+  --lacquer: #e5584d; --gold: #e2b54a; --gold-soft: #2e2817; --good: #5cc795; --good-bg: #173327; --bad: #f07a70; --bad-bg: #3a1c1a;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
-  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 32px 48px;
+  padding-block: 24px 48px;
 }
-.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.site { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 12px; }
 .flag { width: 42px; height: 28px; border-radius: 3px; background: #da251d; display: grid; place-items: center; flex: none; }
 .flag svg { width: 16px; height: 16px; }
 h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; }
 h1 span { color: var(--lacquer); }
+.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tab {
+  font: inherit; font-weight: 600; font-size: 0.95rem; border: 0; background: transparent; color: var(--muted);
+  padding: 8px 16px; border-radius: 9px; cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--lacquer); color: #fff; }
+.tab:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- Quiz ---------- */
+.quiz { max-width: 640px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.quiz-head { display: flex; justify-content: space-between; align-items: center; }
 .score-pill { font-weight: 600; font-size: 0.9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .score-pill b { color: var(--fg); }
 .progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
@@ -79,12 +93,9 @@ h1 span { color: var(--lacquer); }
 .verdict { font-weight: 800; font-size: 1.05rem; }
 .verdict.ok { color: var(--good); }
 .verdict.ko { color: var(--bad); }
-.explain p { margin: 0; color: var(--fg); }
+.explain p { margin: 0; }
 .actions { display: flex; justify-content: flex-end; }
-.btn {
-  font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 12px 20px; cursor: pointer;
-  background: var(--lacquer); color: #fff;
-}
+.btn { font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 12px 20px; cursor: pointer; background: var(--lacquer); color: #fff; }
 .btn:hover { filter: brightness(1.08); }
 .btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .result { text-align: center; align-items: center; }
@@ -95,28 +106,124 @@ h1 span { color: var(--lacquer); }
 .recap span { aspect-ratio: 1; max-width: 100%; border-radius: 6px; display: grid; place-items: center; font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .recap .y { background: var(--good-bg); color: var(--good); }
 .recap .n { background: var(--bad-bg); color: var(--bad); }
-.hint { font-size: 0.8rem; color: var(--muted); text-align: center; }
+.hint { font-size: 0.8rem; color: var(--muted); text-align: center; margin: 0; }
+
+/* ---------- Itinéraire ---------- */
+.trip { display: flex; flex-direction: column; gap: 16px; }
+.trip-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
+.trip-head h2 { font-family: var(--font-display); font-size: 1.3rem; margin: 0; }
+.legs { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; }
+.leg { background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 3px 12px; color: var(--muted); }
+.leg b { color: var(--fg); }
+.trip-body { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+#map { height: 680px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); z-index: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; height: 680px; overflow-y: auto; min-width: 0; }
+.panel-inner { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.stop-btn {
+  width: 100%; font: inherit; color: var(--fg); background: transparent; border: 0; text-align: left; cursor: pointer;
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 8px; border-radius: 10px;
+}
+.stop-btn:hover { background: var(--bg); }
+.stop-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+.stop-btn .t { font-weight: 600; }
+.stop-btn .s { font-size: 0.85rem; color: var(--muted); display: block; }
+.stop-btn .arrow { color: var(--muted); }
+.num {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 0.9rem;
+  background: var(--lacquer); color: #fff; font-variant-numeric: tabular-nums;
+}
+.badge { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.back { font: inherit; font-size: 0.9rem; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; align-self: flex-start; }
+.back:hover { color: var(--fg); }
+.back:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.detail-title { display: flex; gap: 12px; align-items: center; }
+.detail-title h3 { font-family: var(--font-display); font-size: 1.4rem; margin: 0; line-height: 1.2; }
+.detail-title .vn { font-family: var(--font-accent); font-style: italic; color: var(--muted); font-size: 0.95rem; }
+.intro { margin: 0; }
+.travel { font-size: 0.85rem; color: var(--muted); background: var(--bg); border-radius: 8px; padding: 8px 12px; margin: 0; }
+.section-label { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--muted); margin: 4px 0 0; }
+.place { border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); }
+.place.mine { background: var(--gold-soft); border-color: var(--gold); }
+.place h4 { margin: 0; font-size: 1rem; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.place p { margin: 0; font-size: 0.92rem; }
+.place.flash { animation: flash 1.2s ease; }
+.zoom-link { font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--lacquer); background: none; border: 0; padding: 0; cursor: pointer; }
+.zoom-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.tip { font-family: var(--font-accent); font-style: italic; color: var(--muted); margin: 0; border-left: 3px solid var(--gold); padding-left: 12px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.dot.red { background: var(--lacquer); }
+.dot.gold { background: var(--gold); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--gold); }
+
+/* Marqueurs Leaflet */
+.pin { width: 32px; height: 32px; border-radius: 50%; background: var(--lacquer); color: #fff; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); display: grid; place-items: center; font: 800 14px var(--font-display); }
+.pin.active { background: var(--gold); color: #1d2a24; transform: scale(1.15); }
+.spot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.leaflet-tooltip { font-family: var(--font-body); font-weight: 600; }
+.leaflet-container { font-family: var(--font-body); }
+
 @keyframes rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-@media (max-width: 420px) { .card { padding: 18px; } .question { font-size: 1.15rem; } .recap { grid-template-columns: repeat(5, 1fr); } }
+@media (max-width: 860px) {
+  .trip-body { grid-template-columns: minmax(0, 1fr); }
+  #map { height: 55vh; min-height: 320px; }
+  .panel { height: auto; overflow: visible; }
+}
+@media (max-width: 420px) {
+  .card { padding: 18px; } .question { font-size: 1.15rem; } .recap { grid-template-columns: repeat(5, 1fr); }
+  .tab { padding: 8px 12px; }
+}
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <header>
+<div class="site">
+  <header class="topbar">
     <div class="brand">
       <div class="flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#ffcd00" d="M12 1.5l2.47 7.6h8l-6.47 4.7 2.47 7.6L12 16.7l-6.47 4.7 2.47-7.6L1.53 9.1h8z"/></svg></div>
       <h1>Quiz <span>Vietnam</span></h1>
     </div>
-    <div class="score-pill" id="scorePill">Score : <b id="score">0</b> / 20</div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Quiz</button>
+      <button class="tab" role="tab" id="tab-carte" aria-controls="view-carte" aria-selected="false">Itinéraire</button>
+    </nav>
   </header>
-  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
-  <main id="app"></main>
-  <p class="hint">Astuce : touches 1 à 4 pour répondre, Entrée pour continuer.</p>
+
+  <section id="view-quiz" role="tabpanel" aria-labelledby="tab-quiz" class="quiz">
+    <div class="quiz-head">
+      <span class="eyebrow">20 questions</span>
+      <div class="score-pill">Score : <b id="score">0</b> / 20</div>
+    </div>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <div id="app"></div>
+    <p class="hint">Astuce : touches 1 à 4 pour répondre, Entrée pour continuer.</p>
+  </section>
+
+  <section id="view-carte" role="tabpanel" aria-labelledby="tab-carte" class="trip" hidden>
+    <div class="trip-head">
+      <h2>Notre parcours</h2>
+      <div class="legs">
+        <span class="leg">Aller : <b>Hanoï</b></span>
+        <span class="leg">Retour : <b>Hô Chi Minh-Ville</b></span>
+        <span class="leg"><b>8</b> étapes, du nord au sud</span>
+      </div>
+    </div>
+    <div class="trip-body">
+      <div id="map" aria-label="Carte de l'itinéraire"></div>
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </div>
+    <div class="legend">
+      <span><i class="dot red"></i>Étape du parcours (cliquer pour le détail)</span>
+      <span><i class="dot gold"></i>Lieu noté dans le carnet</span>
+    </div>
+  </section>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
+/* =================== QUIZ =================== */
 const QUESTIONS = [
   { q: "Quelle est la capitale du Vietnam ?", o: ["Hô Chi Minh-Ville", "Hanoï", "Da Nang", "Hué"], a: 1,
     e: "Hanoï est la capitale du Vietnam réunifié depuis 1976. Elle se trouve dans le nord du pays, au bord du fleuve Rouge, et a fêté ses 1000 ans en 2010." },
@@ -240,16 +347,272 @@ app.addEventListener("click", (ev) => {
 });
 
 document.addEventListener("keydown", (ev) => {
+  if (document.getElementById("view-quiz").hidden) return;
   if (ev.key >= "1" && ev.key <= "4") choose(Number(ev.key) - 1);
   else if (ev.key === "Enter" && document.activeElement?.id !== "next" && document.activeElement?.id !== "restart") next();
 });
 
-function start(saved) {
-  state = saved && Array.isArray(saved.answers) ? saved : { i: 0, score: 0, answers: [] };
-  render();
+state = { i: 0, score: 0, answers: [] };
+render();
+
+/* =================== ITINÉRAIRE =================== */
+// Étapes dans l'ordre du carnet. "carnet" = lieux notés à la main ; "aussi" = autres incontournables.
+const STOPS = [
+  {
+    name: "Hanoï", vn: "Hà Nội", tag: "Arrivée", ll: [21.0285, 105.8542], zoom: 14,
+    intro: "La capitale, entre lacs, temples et le dédale animé du Vieux Quartier. Parfait pour se mettre dans l'ambiance dès l'arrivée.",
+    travel: "Arrivée en avion à l'aéroport de Noi Bai (environ 45 min du centre).",
+    carnet: [
+      { name: "Lac Hoàn Kiếm", ll: [21.0288, 105.8525], text: "Le cœur de la ville. On traverse le pont rouge Thê Huc pour rejoindre le temple Ngoc Son. Le week-end, les rues autour deviennent piétonnes et très festives le soir." },
+    ],
+    aussi: [
+      { name: "Vieux Quartier (36 rues)", text: "Chaque rue était dédiée à un métier : soie, argent, bambou… Idéal pour la street food le soir." },
+      { name: "Temple de la Littérature", text: "Première université du Vietnam (1076), avec de beaux jardins et cours." },
+      { name: "Spectacle de marionnettes sur l'eau", text: "Une tradition du delta du fleuve Rouge, au théâtre Thang Long au bord du lac." },
+      { name: "Café à l'œuf (cà phê trứng)", text: "Spécialité de Hanoï : café surmonté d'une crème de jaune d'œuf fouetté. À goûter au café Giảng." },
+    ],
+    tip: "Dans le Vieux Quartier, traversez à pas réguliers : les scooters vous contournent.",
+  },
+  {
+    name: "Sapa", vn: "Sa Pa", tag: "Montagnes du nord-ouest", ll: [22.3364, 103.8438], zoom: 12,
+    intro: "Ville de montagne entourée de rizières en terrasses et de villages des minorités Hmong et Dao.",
+    travel: "Depuis Hanoï : bus couchette ou limousine (environ 5 à 6 h) ou train de nuit jusqu'à Lao Cai.",
+    carnet: [],
+    aussi: [
+      { name: "Vallée de Muong Hoa", text: "Les plus belles rizières en terrasses, à parcourir à pied avec un guide local. Dorées en septembre-octobre." },
+      { name: "Mont Fansipan", text: "Le « toit de l'Indochine » (3 143 m), accessible en téléphérique." },
+      { name: "Villages Cat Cat, Lao Chai et Ta Van", text: "Treks faciles à la journée, possibilité de dormir chez l'habitant." },
+    ],
+    tip: "Il fait frais en altitude : prévoyez un pull, même en été.",
+  },
+  {
+    name: "Ha Giang", vn: "Hà Giang", tag: "La boucle", ll: [22.8233, 104.9836], zoom: 9,
+    intro: "Point de départ de la célèbre « boucle de Ha Giang » : 3 à 4 jours de routes de montagne spectaculaires jusqu'à la frontière chinoise.",
+    travel: "Depuis Sapa : bus d'environ 6 à 7 h.",
+    carnet: [
+      { name: "Col de Mã Pí Lèng", ll: [23.2297, 105.4097], text: "Le passage le plus impressionnant de la boucle : une route en corniche au-dessus du canyon de la rivière Nho Que, à couper le souffle." },
+    ],
+    aussi: [
+      { name: "Rivière Nho Que et canyon de Tu San", text: "Balade en bateau au fond du canyon, eau couleur jade." },
+      { name: "Dong Van", text: "Petite ville avec un vieux quartier en pierre et un marché du dimanche coloré." },
+      { name: "Palais des Vuong (Hmong)", text: "Ancienne résidence d'un « roi » Hmong, à Sà Phìn." },
+      { name: "Tour du drapeau de Lung Cu", text: "Le point le plus au nord du Vietnam." },
+    ],
+    tip: "Sauf grande expérience de la moto, faites la boucle avec un « easy rider » (chauffeur local).",
+  },
+  {
+    name: "Ninh Binh", vn: "Ninh Bình", tag: "La baie d'Ha Long terrestre", ll: [20.2506, 105.9745], zoom: 11,
+    intro: "Des pitons calcaires au milieu des rizières et des rivières. On l'appelle souvent la « baie d'Ha Long terrestre ».",
+    travel: "Depuis Ha Giang : bus couchette via Hanoï (environ 7 à 8 h).",
+    carnet: [
+      { name: "Tràng An", ll: [20.2560, 105.8970], text: "Balade de 2 à 3 h en barque à rames entre les falaises, à travers des grottes et jusqu'à des temples. Classé à l'UNESCO." },
+      { name: "Hang Múa", ll: [20.2297, 105.9365], text: "Environ 500 marches jusqu'au sommet, avec un dragon de pierre et une vue magnifique sur Tam Coc. Allez-y au coucher du soleil." },
+      { name: "Baie de Lan Hạ (près d'Ha Long)", ll: [20.745, 107.085], text: "La voisine plus calme de la baie d'Ha Long, au large de l'île de Cat Ba : croisière, kayak et plages cachées. Compter environ 3 h de route depuis Ninh Binh." },
+    ],
+    aussi: [
+      { name: "Tam Cốc", text: "Balade en barque entre les rizières, les rameurs pagaient avec les pieds." },
+      { name: "Hoa Lư", text: "Ancienne capitale du Vietnam (Xe siècle), avec ses temples." },
+      { name: "Pagode de Bái Đính", text: "L'un des plus grands complexes bouddhistes du pays." },
+    ],
+    tip: "Louez un vélo pour circuler entre Tam Coc, Hang Mua et Trang An.",
+  },
+  {
+    name: "Phong Nha", vn: "Phong Nha – Kẻ Bàng", tag: "Grottes & jungle", ll: [17.6105, 106.3093], zoom: 11,
+    intro: "Un parc national classé à l'UNESCO, avec certaines des plus grandes grottes du monde au milieu de la jungle.",
+    travel: "Depuis Ninh Binh : train ou bus de nuit jusqu'à Dong Hoi (environ 8 h), puis 45 min de route.",
+    carnet: [
+      { name: "Grottes & jungle", ll: [17.5822, 106.2830], text: "La grotte de Phong Nha se visite en bateau sur la rivière souterraine. Le parc se découvre aussi en trek dans la jungle." },
+    ],
+    aussi: [
+      { name: "Grotte du Paradis (Thiên Đường)", text: "Des salles immenses aux stalactites géantes, sur une passerelle en bois d'un kilomètre." },
+      { name: "Dark Cave (Hang Tối)", text: "Tyrolienne, kayak et bain de boue dans la grotte." },
+      { name: "Hang Sơn Đoòng", text: "La plus grande grotte du monde. Accessible uniquement en expédition (très chère, réservée longtemps à l'avance)." },
+    ],
+    tip: "Prévoyez des chaussures qui peuvent être mouillées et de l'anti-moustique.",
+  },
+  {
+    name: "Hội An", vn: "Hội An", tag: "Ville des lanternes", ll: [15.8801, 108.3380], zoom: 13,
+    intro: "Ancien port marchand aux maisons jaunes et aux lanternes colorées, entre rizières et plages.",
+    travel: "Depuis Phong Nha : train de Dong Hoi à Da Nang (environ 5 à 6 h), puis 45 min de route.",
+    carnet: [
+      { name: "Cẩm Thanh", ll: [15.8770, 108.3660], text: "La forêt de cocotiers d'eau, qu'on visite en panier rond en bambou (thúng chai), avec des rameurs qui font tourner les paniers." },
+      { name: "Plage d'An Bàng", ll: [15.9140, 108.3420], text: "Belle plage de sable à 4 km de la vieille ville, avec des bars de plage décontractés. Parfaite pour une fin de journée." },
+      { name: "Rizières", ll: [15.9010, 108.3330], text: "Les rizières entre la ville et la mer se parcourent facilement à vélo. Passez par le village maraîcher de Trà Quế." },
+    ],
+    aussi: [
+      { name: "Vieille ville (UNESCO)", text: "Pont couvert japonais, maisons de marchands et maisons communales chinoises. Magique le soir quand les lanternes s'allument." },
+      { name: "Tailleurs", text: "Vêtements faits sur mesure en 24 à 48 h." },
+      { name: "Sanctuaire de Mỹ Sơn", text: "Ruines de temples hindous du royaume Cham, à environ 1 h de route." },
+      { name: "Cao lầu", text: "Le plat de nouilles typique de Hoi An." },
+    ],
+    tip: "Les soirs de pleine lune, la vieille ville éteint ses lumières et allume ses lanternes.",
+  },
+  {
+    name: "Phú Quốc", vn: "Phú Quốc", tag: "Avant-dernière étape · plages", ll: [10.2170, 103.9600], zoom: 10,
+    intro: "Une île tropicale pour se reposer avant la fin du voyage : plages, couchers de soleil et fruits de mer.",
+    travel: "Depuis Hoi An : vol depuis Da Nang (environ 1 h 45).",
+    carnet: [],
+    aussi: [
+      { name: "Plage de Sao (Bãi Sao)", text: "Sable blanc et eau turquoise, sur la côte sud-est." },
+      { name: "Téléphérique de Hòn Thơm", text: "L'un des plus longs téléphériques au-dessus de la mer, avec vue sur les îles An Thoi." },
+      { name: "Snorkeling aux îles An Thới", text: "Excursion en bateau à la journée." },
+      { name: "Marché de nuit de Dương Đông", text: "Fruits de mer grillés et spécialités locales." },
+      { name: "Poivre et nước mắm", text: "L'île est réputée pour son poivre et sa sauce de poisson : visites de fermes possibles." },
+    ],
+    tip: "Le coucher de soleil se regarde depuis la côte ouest.",
+  },
+  {
+    name: "Hô Chi Minh-Ville", vn: "Sài Gòn", tag: "Dernière étape · shopping · retour", ll: [10.7769, 106.7009], zoom: 14,
+    intro: "L'ancienne Saïgon, grande ville dynamique. Dernière étape, consacrée au shopping avant le vol retour.",
+    travel: "Depuis Phu Quoc : vol d'environ 1 h. Vol retour depuis l'aéroport Tân Sơn Nhất.",
+    carnet: [
+      { name: "Shopping", ll: [10.7725, 106.6980], text: "Marché Bến Thành (souvenirs, café, épices, à marchander), Saigon Square (vêtements pas chers), rue Đồng Khởi et ses boutiques de créateurs." },
+    ],
+    aussi: [
+      { name: "Musée des vestiges de la guerre", text: "Un musée fort et marquant sur la guerre du Vietnam." },
+      { name: "Poste centrale & cathédrale Notre-Dame", text: "Deux bâtiments de l'époque française, côte à côte." },
+      { name: "Palais de la Réunification", text: "Là où un char a enfoncé les grilles le 30 avril 1975." },
+      { name: "Tunnels de Cu Chi", text: "Réseau de tunnels de la guerre, en excursion d'une demi-journée." },
+      { name: "Rue Bùi Viện", text: "La rue piétonne la plus animée la nuit." },
+    ],
+    tip: "Gardez de la place dans la valise pour le café vietnamien et son filtre (phin).",
+  },
+];
+
+const panel = document.getElementById("panel");
+let map, stopMarkers = [], activeStop = -1;
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+function renderList() {
+  activeStop = -1;
+  stopMarkers.forEach((m) => m.getElement()?.querySelector(".pin")?.classList.remove("active"));
+  panel.innerHTML = `
+    <div class="panel-inner">
+      <div class="badge">Les étapes</div>
+      <ol class="stops">
+        ${STOPS.map((s, i) => `
+          <li><button class="stop-btn" id="stop-${i}" data-i="${i}">
+            <span class="num">${i + 1}</span>
+            <span><span class="t">${s.name}</span><span class="s">${s.tag}</span></span>
+            <span class="arrow" aria-hidden="true">›</span>
+          </button></li>`).join("")}
+      </ol>
+      <p class="tip">Cliquez sur une étape (ici ou sur la carte) pour voir les lieux à visiter.</p>
+    </div>`;
+  panel.scrollTop = 0;
 }
-window.claude?.hot?.snapshot?.(() => state);
-window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+
+function renderStop(i, focusPlace) {
+  const s = STOPS[i];
+  activeStop = i;
+  stopMarkers.forEach((m, k) => m.getElement()?.querySelector(".pin")?.classList.toggle("active", k === i));
+  panel.innerHTML = `
+    <div class="panel-inner">
+      <button class="back" id="back">‹ Toutes les étapes</button>
+      <div class="detail-title">
+        <span class="num">${i + 1}</span>
+        <div><div class="badge">${s.tag}</div><h3>${s.name}</h3>${s.vn !== s.name ? `<div class="vn">${s.vn}</div>` : ""}</div>
+      </div>
+      <p class="intro">${s.intro}</p>
+      <p class="travel">${s.travel}</p>
+      ${s.carnet.length ? `<div class="section-label">Dans votre carnet</div>
+        ${s.carnet.map((p, k) => `<div class="place mine" id="place-${i}-${k}">
+          <h4>${p.name} <button class="zoom-link" data-i="${i}" data-k="${k}">Voir sur la carte</button></h4>
+          <p>${p.text}</p></div>`).join("")}` : ""}
+      <div class="section-label">À voir aussi</div>
+      ${s.aussi.map((p) => `<div class="place"><h4>${p.name}</h4><p>${p.text}</p></div>`).join("")}
+      <p class="tip">${s.tip}</p>
+      <div class="actions" style="justify-content:space-between">
+        ${i > 0 ? `<button class="back" data-go="${i - 1}">‹ ${STOPS[i - 1].name}</button>` : "<span></span>"}
+        ${i < STOPS.length - 1 ? `<button class="back" data-go="${i + 1}">${STOPS[i + 1].name} ›</button>` : ""}
+      </div>
+    </div>`;
+  panel.scrollTop = 0;
+  if (focusPlace !== undefined) {
+    const el = document.getElementById(`place-${i}-${focusPlace}`);
+    if (el) { el.classList.add("flash"); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  }
+  document.getElementById("back").focus({ preventScroll: true });
+}
+
+function flyToStop(i) {
+  const s = STOPS[i];
+  const pts = [s.ll, ...s.carnet.map((p) => p.ll)];
+  if (pts.length > 1) map.flyToBounds(L.latLngBounds(pts).pad(0.3), { maxZoom: s.zoom, duration: 0.8 });
+  else map.flyTo(s.ll, s.zoom, { duration: 0.8 });
+}
+
+function showOverview() {
+  map.flyToBounds(L.latLngBounds(STOPS.map((s) => s.ll)).pad(0.12), { duration: 0.8 });
+}
+
+panel.addEventListener("click", (ev) => {
+  const stop = ev.target.closest(".stop-btn");
+  if (stop) { const i = +stop.dataset.i; renderStop(i); flyToStop(i); return; }
+  const go = ev.target.closest("[data-go]");
+  if (go) { const i = +go.dataset.go; renderStop(i); flyToStop(i); return; }
+  if (ev.target.closest("#back")) { renderList(); showOverview(); return; }
+  const z = ev.target.closest(".zoom-link");
+  if (z) {
+    const p = STOPS[+z.dataset.i].carnet[+z.dataset.k];
+    map.flyTo(p.ll, 14, { duration: 0.8 });
+    if (window.matchMedia("(max-width: 860px)").matches) document.getElementById("map").scrollIntoView({ behavior: "smooth" });
+  }
+});
+
+function initMap() {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  map = L.map("map", { scrollWheelZoom: true, zoomSnap: 0.5 });
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, {
+    maxZoom: 19, subdomains: "abcd",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  }).addTo(map);
+
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--lacquer").trim();
+  L.polyline(STOPS.map((s) => s.ll), { color: accent, weight: 3, opacity: 0.8, dashArray: "6 8" }).addTo(map);
+
+  STOPS.forEach((s, i) => {
+    s.carnet.forEach((p, k) => {
+      L.marker(p.ll, { icon: L.divIcon({ className: "", html: '<div class="spot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }) })
+        .bindTooltip(p.name, { direction: "top", offset: [0, -8] })
+        .on("click", () => { renderStop(i, k); map.flyTo(p.ll, 14, { duration: 0.8 }); })
+        .addTo(map);
+    });
+  });
+
+  stopMarkers = STOPS.map((s, i) =>
+    L.marker(s.ll, {
+      icon: L.divIcon({ className: "", html: `<div class="pin">${i + 1}</div>`, iconSize: [32, 32], iconAnchor: [16, 16] }),
+      zIndexOffset: 1000, title: s.name,
+    })
+      .bindTooltip(`${i + 1}. ${s.name}`, { direction: "right", offset: [16, 0] })
+      .on("click", () => { renderStop(i); flyToStop(i); })
+      .addTo(map)
+  );
+
+  map.fitBounds(L.latLngBounds(STOPS.map((s) => s.ll)).pad(0.12));
+}
+
+/* =================== ONGLETS =================== */
+const tabs = { quiz: document.getElementById("tab-quiz"), carte: document.getElementById("tab-carte") };
+const views = { quiz: document.getElementById("view-quiz"), carte: document.getElementById("view-carte") };
+
+function showTab(name) {
+  for (const k in tabs) {
+    tabs[k].setAttribute("aria-selected", k === name);
+    views[k].hidden = k !== name;
+  }
+  if (name === "carte") {
+    if (!map && window.L) { initMap(); renderList(); }
+    else if (map) map.invalidateSize();
+  }
+  try { history.replaceState(null, "", name === "carte" ? "#carte" : "#quiz"); } catch (e) {}
+}
+
+tabs.quiz.addEventListener("click", () => showTab("quiz"));
+tabs.carte.addEventListener("click", () => showTab("carte"));
+renderList();
+showTab(location.hash === "#carte" ? "carte" : "quiz");
 </script>
 </body>
 </html>
