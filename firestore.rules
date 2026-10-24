@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Liste d'idées partagée de l'onglet To-do
+    match /idees/{id} {
+      allow read: if true;
+
+      // Ajout : uniquement ces 4 champs, texte de 1 à 120 caractères, horodatage serveur
+      allow create: if request.resource.data.keys().hasOnly(['text', 'where', 'done', 'createdAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 120
+        && request.resource.data.where is string
+        && request.resource.data.where.size() <= 4
+        && request.resource.data.done == false
+        && request.resource.data.createdAt == request.time;
+
+      // Modification : seulement cocher / décocher
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done'])
+        && request.resource.data.done is bool;
+
+      allow delete: if true;
+    }
+
+    // Tout le reste est fermé
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

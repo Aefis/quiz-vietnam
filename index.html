@@ -202,6 +202,7 @@ h1 span { color: var(--lacquer); }
 .del:hover { color: var(--bad); background: var(--bad-bg); }
 .del:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
 .todo-empty { padding: 24px 16px; text-align: center; color: var(--muted); }
+.hint.err { color: var(--bad); font-weight: 600; }
 
 @media (max-width: 860px) {
   .trip-body { grid-template-columns: minmax(0, 1fr); }
@@ -275,11 +276,13 @@ h1 span { color: var(--lacquer); }
       <button class="chip" data-f="done" aria-pressed="false">Fait</button>
     </div>
     <ul class="todo-list" id="todoList"></ul>
-    <p class="hint">La liste est enregistrée dans ce navigateur, sur cet appareil.</p>
+    <p class="hint" id="todoHint">La liste est enregistrée dans ce navigateur, sur cet appareil.</p>
   </section>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
 <script>
 /* =================== QUIZ =================== */
 const QUESTIONS = [
@@ -785,24 +788,66 @@ todoStop.innerHTML = `<option value="">Sans étape</option>` +
   STOPS.map((s, i) => `<option value="${i}">${i + 1}. ${s.name}</option>` +
     PASSAGES.map((p, j) => p.after === i ? `<option value="p${j}">↳ ${p.name}</option>` : "").join("")).join("");
 
+// Liste partagée via Firestore quand FIREBASE_CONFIG est renseigné, sinon liste locale au navigateur.
+// Cette config n'est pas secrète : ce sont les règles Firestore (firestore.rules) qui protègent les données.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCIuFUc2u2lsAbVLKLe3pXlYBbeLSsu9QE",
+  authDomain: "quiz-vietnam-a944e.firebaseapp.com",
+  projectId: "quiz-vietnam-a944e",
+  storageBucket: "quiz-vietnam-a944e.firebasestorage.app",
+  messagingSenderId: "925671523620",
+  appId: "1:925671523620:web:0836399d257e5a1821dfb1",
+};
+let ideas = null;
+const todoHint = document.getElementById("todoHint");
+const showError = (msg) => { todoHint.textContent = msg; todoHint.classList.add("err"); };
+
+if (FIREBASE_CONFIG && window.firebase) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  ideas = firebase.firestore().collection("idees");
+  todoHint.textContent = "Liste partagée : tout le monde voit et ajoute les mêmes idées, en direct.";
+  todos = [];
+  todoList.innerHTML = `<li class="todo-empty">Chargement des idées…</li>`;
+  ideas.orderBy("createdAt").onSnapshot(
+    (snap) => {
+      todos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      todoHint.classList.remove("err");
+      todoHint.textContent = "Liste partagée : tout le monde voit et ajoute les mêmes idées, en direct.";
+      renderTodos();
+    },
+    () => showError("Impossible de charger la liste partagée. Vérifiez votre connexion puis rechargez la page.")
+  );
+}
+
+const fail = () => showError("La modification n'a pas été enregistrée. Vérifiez votre connexion et réessayez.");
+
 todoForm.addEventListener("submit", (ev) => {
   ev.preventDefault();
   const text = todoText.value.trim();
   if (!text) return;
-  todos.push({ id: Date.now().toString(36), text, where: todoStop.value, done: false });
-  saveTodos();
-  if (todoFilter === "done") setFilter("all"); else renderTodos();
+  if (ideas) {
+    ideas.add({ text, where: todoStop.value, done: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(fail);
+  } else {
+    todos.push({ id: Date.now().toString(36), text, where: todoStop.value, done: false });
+    saveTodos();
+    renderTodos();
+  }
+  if (todoFilter === "done") setFilter("all");
   todoText.value = "";
   todoText.focus();
 });
 
 todoList.addEventListener("change", (ev) => {
   const t = todos.find((x) => x.id === ev.target.dataset.id);
-  if (t) { t.done = ev.target.checked; saveTodos(); renderTodos(); }
+  if (!t) return;
+  if (ideas) return void ideas.doc(t.id).update({ done: ev.target.checked }).catch(fail);
+  t.done = ev.target.checked; saveTodos(); renderTodos();
 });
 todoList.addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-del]");
-  if (b) { todos = todos.filter((x) => x.id !== b.dataset.del); saveTodos(); renderTodos(); }
+  if (!b) return;
+  if (ideas) return void ideas.doc(b.dataset.del).delete().catch(fail);
+  todos = todos.filter((x) => x.id !== b.dataset.del); saveTodos(); renderTodos();
 });
 
 function setFilter(f) {
@@ -815,8 +860,7 @@ document.querySelector(".filters").addEventListener("click", (ev) => {
   if (c) setFilter(c.dataset.f);
 });
 
-todos = loadTodos();
-renderTodos();
+if (!ideas) { todos = loadTodos(); renderTodos(); }
 
 /* =================== ONGLETS =================== */
 const tabs = { quiz: document.getElementById("tab-quiz"), carte: document.getElementById("tab-carte"), todo: document.getElementById("tab-todo") };
