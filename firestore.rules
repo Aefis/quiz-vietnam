@@ -15,11 +15,9 @@ service cloud.firestore {
         && request.resource.data.done == false
         && request.resource.data.createdAt == request.time;
 
-      // Modification : cocher / décocher, ou ajouter exactement un vote « Moi aussi »
-      allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done'])
-          && request.resource.data.done is bool)
-        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
-          && request.resource.data.votes == resource.data.get('votes', 0) + 1);
+      // Modification : seulement cocher / décocher
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done'])
+        && request.resource.data.done is bool;
 
       allow delete: if true;
     }
